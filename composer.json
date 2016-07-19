@@ -1,0 +1,25 @@
+{
+    "name": "cmp/storage",
+    "description": "Virtual storage abstraction layer",
+    "type": "lib",
+    "require": {
+        "aws/aws-sdk-php": "^3.0.0",
+        "psr/log": "^1.0"
+    },
+    "require-dev": {
+        "phpspec/phpspec": "^2.5"
+    },
+    "license": "MIT",
+    "config": {
+        "bin-dir": "bin"
+    },
+    "autoload": {
+        "psr-4": { "": "src" }
+    },
+    "authors": [
+        {
+            "name": "jmartincmp",
+            "email": "jordi.martin@teamcmp.com"
+        }
+    ]
+}
