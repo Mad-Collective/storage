@@ -2,7 +2,6 @@
 
 namespace Cmp\Storage;
 
-
 interface AdapterInterface extends VirtualStorageInterface
 {
     /**
@@ -11,5 +10,4 @@ interface AdapterInterface extends VirtualStorageInterface
      * @return string
      */
     public function getName();
-
 }

@@ -8,7 +8,6 @@
 
 namespace Cmp\Storage\Exception;
 
-
 class InvalidPathException extends \Exception
 {
 

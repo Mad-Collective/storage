@@ -47,15 +47,6 @@ class StorageBuilderSpec extends ObjectBehavior
     }
 
 
-    public function it_fails_when_there_are_no_adapters()
-    {
-
-        $this->shouldNotHaveLoadedAdapters();
-        $this->shouldThrow('\Cmp\Storage\Exception\ThereAreNoAdaptersAvailableException')->during('build', []);
-
-    }
-
-
     public function it_throw_and_exception_when_the_adapter_is_not_valid()
     {
         $this->shouldThrow('\Cmp\Storage\Exception\StorageAdapterNotFoundException')->during('addAdapter', ['string']);
@@ -77,7 +68,12 @@ class StorageBuilderSpec extends ObjectBehavior
         $this->addAdapter($adapterWithLogger);
 
         $adapterWithLogger->setLogger(Argument::any())->shouldHaveBeenCalled();
+    }
 
+    public function it_loads_the_the_default_if_no_other_has_been_been_added(AbstractStorageCallStrategy $callStrategy)
+    {
+        $this->build($callStrategy);
+        $callStrategy->addAdapters(Argument::any())->shouldHaveBeenCalled();
     }
 
     public function it_returns_a_default_call_strategy_when_no_other_has_been_added(AdapterInterface $a)
@@ -106,7 +102,6 @@ class StorageBuilderSpec extends ObjectBehavior
         $callStrategy->addAdapters([$a])->shouldBeCalled();
         $storage = $this->build($callStrategy);
         $storage->getCallStrategyName()->shouldBe($strategyName);
-
     }
 
     public function it_builds_a_virtual_storage_with_specific_call_strategy_and_logger_provider(
@@ -117,6 +112,4 @@ class StorageBuilderSpec extends ObjectBehavior
         $this->addAdapter($a);
         $this->build($callStrategy, $loggerInterface)->shouldHaveType('\Cmp\Storage\VirtualStorage');
     }
-
-
 }

@@ -26,7 +26,6 @@ class CallAllStrategySpec extends ObjectBehavior
         $adapter2->exists($path)->willReturn(true);
         $adapter3->exists($path)->willReturn(true);
         $this->exists($path)->shouldBe(true);
-
     }
 
 
@@ -60,7 +59,8 @@ class CallAllStrategySpec extends ObjectBehavior
 
         $this->delete($path)->shouldBe(true);
 
-        $logger->log(LOG_ERR,
+        $logger->log(
+            LOG_ERR,
             'Adapter "ADAPTER DUMMY" fails on delete call.',
             Argument::any()
         )->shouldHaveBeenCalled();

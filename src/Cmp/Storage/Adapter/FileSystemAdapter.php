@@ -1,7 +1,6 @@
 <?php
 namespace Cmp\Storage\Adapter;
 
-
 use Cmp\Storage\Exception\FileNotFoundException;
 use Cmp\Storage\Exception\InvalidPathException;
 
@@ -65,7 +64,6 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
         $this->assertNotFileExists($path);
 
         return fopen($path, "r");
-
     }
 
     /**
@@ -83,7 +81,6 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     {
         $path = $this->normalizePath($path);
         $this->assertNotFileExists($path);
-        $newpath = $this->normalizePath($newpath);
 
         return rename($path, $newpath);
     }
@@ -116,19 +113,10 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
      */
     public function put($path, $contents)
     {
-
-     echo $path;
-
         if (is_dir($path)) {
             throw new InvalidPathException();
         }
-
-        //create ancestors
-        $dir = dirname($path);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
-        }
-
+        $this->createParentFolder($path);
         if (($size = file_put_contents($path, $contents)) === false) {
             return false;
         }
@@ -143,12 +131,16 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
      * @param string   $path     The path to the file.
      * @param resource $resource The file handle.
      *
-     * @throws \Cmp\Storage\InvalidArgumentException Thrown if $resource is not a resource.
-     *
-     * @return bool True on success, false on failure.
+     * @return bool
+     * @throws InvalidPathException
      */
     public function putStream($path, $resource)
     {
+
+        if (is_dir($path)) {
+            throw new InvalidPathException();
+        }
+        $this->createParentFolder($path);
         $stream = fopen($path, 'w+');
 
         if (!$stream) {
@@ -181,5 +173,14 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
         return realpath($path);
     }
 
-
+    /**
+     * @param $path
+     */
+    private function createParentFolder($path)
+    {
+        $dir = dirname($path);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+    }
 }

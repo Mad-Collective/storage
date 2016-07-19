@@ -8,7 +8,6 @@
 
 namespace Cmp\Storage;
 
-
 use Cmp\Storage\Strategy\AbstractStorageCallStrategy;
 
 class VirtualStorage implements VirtualStorageInterface
@@ -40,7 +39,8 @@ class VirtualStorage implements VirtualStorageInterface
     /**
      * @return AbstractStorageCallStrategy
      */
-    public function getStrategy(){
+    public function getStrategy()
+    {
         return $this->storageCallStrategy;
     }
 

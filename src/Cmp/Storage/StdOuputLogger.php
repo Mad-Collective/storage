@@ -8,13 +8,11 @@
 
 namespace Cmp\Storage;
 
-
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
 class StdOuputLogger implements LoggerInterface
 {
-
 
 
     public function __construct()
@@ -32,7 +30,7 @@ class StdOuputLogger implements LoggerInterface
      */
     public function emergency($message, array $context = array())
     {
-        $this->log(LogLevel::EMERGENCY,$message,$context);
+        $this->log(LogLevel::EMERGENCY, $message, $context);
     }
 
     /**
@@ -48,7 +46,7 @@ class StdOuputLogger implements LoggerInterface
      */
     public function alert($message, array $context = array())
     {
-        $this->log(LogLevel::ALERT,$message,$context);
+        $this->log(LogLevel::ALERT, $message, $context);
     }
 
     /**
@@ -63,7 +61,7 @@ class StdOuputLogger implements LoggerInterface
      */
     public function critical($message, array $context = array())
     {
-        $this->log(LogLevel::CRITICAL,$message,$context);
+        $this->log(LogLevel::CRITICAL, $message, $context);
     }
 
     /**
@@ -77,7 +75,7 @@ class StdOuputLogger implements LoggerInterface
      */
     public function error($message, array $context = array())
     {
-        $this->log(LogLevel::ERROR,$message,$context);
+        $this->log(LogLevel::ERROR, $message, $context);
     }
 
     /**
@@ -93,7 +91,7 @@ class StdOuputLogger implements LoggerInterface
      */
     public function warning($message, array $context = array())
     {
-        $this->log(LogLevel::WARNING,$message,$context);
+        $this->log(LogLevel::WARNING, $message, $context);
     }
 
     /**
@@ -106,7 +104,7 @@ class StdOuputLogger implements LoggerInterface
      */
     public function notice($message, array $context = array())
     {
-        $this->log(LogLevel::NOTICE,$message,$context);
+        $this->log(LogLevel::NOTICE, $message, $context);
     }
 
     /**
@@ -121,7 +119,7 @@ class StdOuputLogger implements LoggerInterface
      */
     public function info($message, array $context = array())
     {
-        $this->log(LogLevel::INFO,$message,$context);
+        $this->log(LogLevel::INFO, $message, $context);
     }
 
     /**
@@ -134,8 +132,9 @@ class StdOuputLogger implements LoggerInterface
      */
     public function debug($message, array $context = array())
     {
-        $this->log(LogLevel::DEBUG,$message,$context);
+        $this->log(LogLevel::DEBUG, $message, $context);
     }
+
 
     /**
      * Logs with an arbitrary level.
@@ -148,7 +147,24 @@ class StdOuputLogger implements LoggerInterface
      */
     public function log($level, $message, array $context = array())
     {
-        $d = new \DateTime();
-        printf("%s %s %s %s\n",$d->format('DATE_RFC850'),$level,$message,json_encode($context));
+        file_put_contents('php://stdout', $this->formatMessage($level, $message, $context), FILE_APPEND);
+    }
+
+    protected function interpolate($message, array $context = array())
+    {
+        // build a replacement array with braces around the context keys
+        $replace = array();
+        foreach ($context as $key => $val) {
+            $replace['{'.$key.'}'] = $val;
+        }
+
+        // interpolate replacement values into the message and return
+        return strtr($message, $replace);
+    }
+
+
+    protected function formatMessage($level, $message, array $context = array())
+    {
+        return '['.date('Y-m-d H:i:s').'] ['.$level.'] '.$this->interpolate($message, $context).PHP_EOL;
     }
 }

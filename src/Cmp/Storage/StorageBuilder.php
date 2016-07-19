@@ -47,7 +47,6 @@ class StorageBuilder
     public function __construct()
     {
         $this->adapters = [];
-
     }
 
 
@@ -124,7 +123,7 @@ class StorageBuilder
     {
 
         if (!$this->hasLoadedAdapters()) {
-            throw new ThereAreNoAdaptersAvailableException();
+            $this->addAdapter($this->getDefaultBuiltinAdapter());
         }
 
         if ($callStrategy != null) {
@@ -225,5 +224,8 @@ class StorageBuilder
         return new StdOuputLogger();
     }
 
-
+    private function getDefaultBuiltinAdapter()
+    {
+        return 'FileSystem';
+    }
 }

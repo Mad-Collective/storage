@@ -140,7 +140,6 @@ class CallAllStrategy extends AbstractStorageCallStrategy
     {
         $result = false;
         foreach ($this->getAdapters() as $adapter) {
-
             try {
                 $result = $adapter->delete($path) || $result;
             } catch (\Exception $e) {

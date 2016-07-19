@@ -15,7 +15,8 @@ class VirtualStorageSpec extends ObjectBehavior
     }
 
 
-    function it_run_calls_over_the_strategy(AbstractStorageCallStrategy $callStrategy) {
+    function it_run_calls_over_the_strategy(AbstractStorageCallStrategy $callStrategy)
+    {
         $path = "/b/c";
         $newpath = "/b/d";
         $contents = "hi!";
@@ -43,7 +44,8 @@ class VirtualStorageSpec extends ObjectBehavior
         $this->putStream($path, $stream)->shouldBe(true);
     }
 
-    function it_knows_the_call_strategy(AbstractStorageCallStrategy $callStrategy) {
+    function it_knows_the_call_strategy(AbstractStorageCallStrategy $callStrategy)
+    {
 
         $strategyName = "Dummy strategy";
         $callStrategy->getStrategyName()->willReturn($strategyName);

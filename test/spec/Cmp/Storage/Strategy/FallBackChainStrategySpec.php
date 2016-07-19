@@ -15,7 +15,6 @@ class FallBackChainStrategySpec extends ObjectBehavior
 
         $this->addAdapters([$adapter1, $adapter2, $adapter3]);
         $this->shouldHaveType('Cmp\Storage\Strategy\FallBackChainStrategy');
-
     }
 
 
@@ -65,7 +64,8 @@ class FallBackChainStrategySpec extends ObjectBehavior
 
 
         $adapter2->delete($path)->willReturn(false);
-        $logger->log(LOG_ERR,
+        $logger->log(
+            LOG_ERR,
             'The adapter "ADAPTER DUMMY" is failing on delete call',
             ['exception' =>  Argument::any()]
         );
@@ -90,5 +90,4 @@ class FallBackChainStrategySpec extends ObjectBehavior
 
         $this->shouldThrow('Cmp\Storage\Exception\FileNotFoundException')->during('get', [$path]);
     }
-
 }

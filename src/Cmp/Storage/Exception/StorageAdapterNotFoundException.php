@@ -8,7 +8,6 @@
 
 namespace Cmp\Storage\Exception;
 
-
 class StorageAdapterNotFoundException extends \Exception
 {
 }

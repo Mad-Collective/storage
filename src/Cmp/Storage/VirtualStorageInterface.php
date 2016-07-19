@@ -1,5 +1,6 @@
 <?php
 namespace Cmp\Storage;
+
 /**
  * Created by PhpStorm.
  * User: jordimartin
@@ -86,5 +87,4 @@ interface VirtualStorageInterface
      * @return bool True on success, false on failure.
      */
     public function putStream($path, $resource);
-
 }

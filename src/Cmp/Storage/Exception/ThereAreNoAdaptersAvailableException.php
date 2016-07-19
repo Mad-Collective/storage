@@ -8,7 +8,6 @@
 
 namespace Cmp\Storage\Exception;
 
-
 class ThereAreNoAdaptersAvailableException extends \Exception
 {
 }
