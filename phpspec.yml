@@ -2,3 +2,10 @@ suites:
   storage:
     src_path: %paths.config%/src
     spec_path: %paths.config%/test
+extensions:
+  - PhpSpec\Extension\CodeCoverageExtension
+code_coverage:
+  format:
+    - clover
+  output:
+    clover: coverage.clover
