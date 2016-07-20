@@ -4,7 +4,6 @@ namespace spec\Cmp\Storage;
 
 use Cmp\Storage\Strategy\AbstractStorageCallStrategy;
 use PhpSpec\ObjectBehavior;
-use Prophecy\Argument;
 
 class VirtualStorageSpec extends ObjectBehavior
 {
