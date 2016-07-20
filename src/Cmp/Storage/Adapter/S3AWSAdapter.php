@@ -1,18 +1,13 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: jordimartin
- * Date: 18/07/16
- * Time: 11:26
- */
 
 namespace Cmp\Storage\Adapter;
 
+use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use Cmp\Storage\AdapterInterface;
-use Cmp\Storage\FactoryAdapterInterface;
+use Cmp\Storage\Exception\InvalidStorageAdapterException;
 
-class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
+class S3AWSAdapter implements AdapterInterface
 {
     /**
      * @var S3Client
@@ -23,37 +18,40 @@ class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
      */
     private $bucket;
 
+    /**
+     * @var array
+     */
+    private static $mandatoryEnvVars = [
+        'AWS_REGION',
+        'AWS_ACCESS_KEY_ID',
+        'AWS_SECRET_ACCESS_KEY',
+        'AWS_BUCKET'
+    ];
 
-    public function __construct()
+
+    public function __construct(array $config = [], $bucket = "")
     {
-        $config = [
-            'version' => 'latest',
-            'region' => getenv('AWS_REGION'),
-            'credentials' => [
-                'key' => getenv('AWS_ACCESS_KEY_ID'),
-                'secret' => getenv('AWS_SECRET_ACCESS_KEY'),
-            ]
-        ];
+        if (empty($config) || empty($bucket)) {
+            foreach (self::$mandatoryEnvVars as $env) {
+                if (empty(getenv($env))) {
+                    throw new InvalidStorageAdapterException(
+                        'The env "'.
+                        $env.
+                        '" is missing. Set it to run this adapter as builtin or use the regular constructor.'
+                    );
+                }
+                $config = [
+                    'version' => 'latest',
+                    'region' => getenv('AWS_REGION'),
+                    'credentials' => [
+                        'key' => getenv('AWS_ACCESS_KEY_ID'),
+                        'secret' => getenv('AWS_SECRET_ACCESS_KEY'),
+                    ]
+                ];
+                $this->bucket = getenv('AWS_BUCKET');
+            }
+        }
         $this->client = new S3Client($config);
-        $this->bucket = getenv('AWS_BUCKET');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function applyPathPrefix($prefix)
-    {
-        return ltrim($prefix, '/');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setPathPrefix($prefix)
-    {
-        $prefix = ltrim($prefix, '/');
-
-        return $prefix;
     }
 
     /**
@@ -75,13 +73,11 @@ class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
      */
     public function exists($path)
     {
-        $location = $this->applyPathPrefix($path);
-
-        if ($this->s3Client->doesObjectExist($this->bucket, $location)) {
+        if ($this->client->doesObjectExist($this->bucket, $path)) {
             return true;
         }
 
-        return $this->doesDirectoryExist($location);
+        return $this->doesDirectoryExist($path);
     }
 
 
@@ -90,7 +86,7 @@ class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
      *
      * @param string $path The path to the file.
      *
-     * @throws \Cmp\Storage\FileNotFoundException
+     * @throws FileNotFoundException
      *
      * @return string The file contents or false on failure.
      */
@@ -99,7 +95,7 @@ class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
         $response = $this->readObject($path);
 
         if ($response !== false) {
-            $response['contents'] = $response['contents']->getContents();
+            $response = $response['Body']->getContents();
         }
 
         return $response;
@@ -110,20 +106,21 @@ class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
      *
      * @param string $path The path to the file.
      *
-     * @throws \Cmp\Storage\FileNotFoundException
+     * @throws FileNotFoundException
      *
      * @return resource The path resource or false on failure.
      */
     public function getStream($path)
     {
+
         $response = $this->readObject($path);
 
         if ($response !== false) {
-            $response['stream'] = $response['contents']->detach();
-            unset($response['contents']);
+            $response = $response['Body']->detach();
         }
 
         return $response;
+
     }
 
     /**
@@ -135,11 +132,11 @@ class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
      */
     protected function readObject($path)
     {
-        $command = $this->s3Client->getCommand(
+        $command = $this->client->getCommand(
             'getObject',
             [
                 'Bucket' => $this->bucket,
-                'Key' => $this->applyPathPrefix($path),
+                'Key' => $path,
                 '@http' => [
                     'stream' => true,
                 ],
@@ -148,12 +145,12 @@ class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
 
         try {
             /** @var Result $response */
-            $response = $this->s3Client->execute($command);
+            $response = $this->client->execute($command);
         } catch (S3Exception $e) {
             return false;
         }
 
-        return $this->normalizeResponse($response->toArray(), $path);
+        return $response;
     }
 
     /**
@@ -163,7 +160,7 @@ class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
      * @param string $newpath The new path of the file.
      *
      * @throws \Cmp\Storage\FileExistsException   Thrown if $newpath exists.
-     * @throws \Cmp\Storage\FileNotFoundException Thrown if $path does not exist.
+     * @throws FileNotFoundException Thrown if $path does not exist.
      *
      * @return bool True on success, false on failure.
      */
@@ -174,6 +171,7 @@ class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
         }
 
         return $this->delete($path);
+
     }
 
     /**
@@ -181,51 +179,31 @@ class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
      *
      * @param string $path
      *
-     * @throws \Cmp\Storage\FileNotFoundException
+     * @throws FileNotFoundException
      *
      * @return bool True on success, false on failure.
      */
     public function delete($path)
     {
-        $location = $this->applyPathPrefix($path);
 
-        $command = $this->s3Client->getCommand(
+        $command = $this->client->getCommand(
             'deleteObject',
             [
                 'Bucket' => $this->bucket,
-                'Key' => $location,
+                'Key' => $path,
             ]
         );
 
-        $this->s3Client->execute($command);
-
-        return !$this->has($path);
-    }
-
-
-    protected function normalizeResponse(array $response, $path = null)
-    {
-        $result = [
-            'path' => $path
-                ?: $this->removePathPrefix(
-                    isset($response['Key']) ? $response['Key'] : $response['Prefix']
-                ),
-        ];
-        $result = array_merge($result, Util::pathinfo($result['path']));
-
-        if (isset($response['LastModified'])) {
-            $result['timestamp'] = strtotime($response['LastModified']);
+        try {
+            $this->client->execute($command);
+        } catch (S3Exception $e) {
+            return false;
         }
 
-        if (substr($result['path'], -1) === '/') {
-            $result['type'] = 'dir';
-            $result['path'] = rtrim($result['path'], '/');
+        return true;
 
-            return $result;
-        }
-
-        return array_merge($result, Util::map($response, static::$resultMap), ['type' => 'file']);
     }
+
 
     /**
      * Create a file or update if exists. It will create the missing folders.
@@ -238,24 +216,15 @@ class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
      */
     public function put($path, $contents)
     {
-        $key = $this->applyPathPrefix($path);
-        $acl = isset($options['ACL']) ? $options['ACL'] : 'private';
-
-        if (!isset($options['ContentType']) && is_string($body)) {
-            $options['ContentType'] = Util::guessMimeType($path, $body);
+        $acl = 'public-read';
+        $options = [];
+        try {
+            $this->client->upload($this->bucket, $path, $contents, $acl, ['params' => $options]);
+        } catch (S3Exception $e) {
+            return false;
         }
 
-        if (!isset($options['ContentLength'])) {
-            $options['ContentLength'] = is_string($body) ? Util::contentSize($body) : Util::getStreamSize($body);
-        }
-
-        if ($options['ContentLength'] === null) {
-            unset($options['ContentLength']);
-        }
-
-        $this->s3Client->upload($this->bucket, $key, $body, $acl, ['params' => $options]);
-
-        return $this->normalizeResponse($options, $key);
+        return true;
     }
 
     /**
@@ -270,25 +239,24 @@ class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
      */
     public function putStream($path, $resource)
     {
-        // TODO: Implement putStream() method.
+        return $this->put($path, $resource);
     }
 
 
     private function copy($path, $newpath)
     {
-        $command = $this->s3Client->getCommand(
+        $command = $this->client->getCommand(
             'copyObject',
             [
                 'Bucket' => $this->bucket,
-                'Key' => $this->applyPathPrefix($newpath),
-                'CopySource' => urlencode($this->bucket.'/'.$this->applyPathPrefix($path)),
-                'ACL' => $this->getRawVisibility($path) === AdapterInterface::VISIBILITY_PUBLIC
-                    ? 'public-read' : 'private',
-            ] + $this->options
+                'Key' => $newpath,
+                'CopySource' => urlencode($this->bucket.'/'.$path),
+                'ACL' => 'public-read',
+            ]
         );
 
         try {
-            $this->s3Client->execute($command);
+            $this->client->execute($command);
         } catch (S3Exception $e) {
             return false;
         }
@@ -298,9 +266,7 @@ class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
 
     private function doesDirectoryExist($location)
     {
-        // Maybe this isn't an actual key, but a prefix.
-        // Do a prefix listing of objects to determine.
-        $command = $this->s3Client->getCommand(
+        $command = $this->client->getCommand(
             'listObjects',
             [
                 'Bucket' => $this->bucket,
@@ -310,7 +276,7 @@ class S3AWSAdapter implements \Cmp\Storage\AdapterInterface
         );
 
         try {
-            $result = $this->s3Client->execute($command);
+            $result = $this->client->execute($command);
 
             return $result['Contents'] || $result['CommonPrefixes'];
         } catch (S3Exception $e) {
