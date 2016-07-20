@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: marclopez
- * Date: 20/07/16
- * Time: 18:17
- */
 
 namespace Cmp\Storage\Date;
 
