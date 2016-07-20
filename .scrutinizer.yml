@@ -8,9 +8,9 @@ build:
         command: "bin/phpspec run -f progress -c phpspec.yml"
         coverage: 
           file: coverage.clover
-          format: clover
+          format: php-clover
       -
-        command: "bin/phpunit --coverage-clover coverage_integration.clover"
+        command: "bin/phpunit --coverage-clover=coverage_integration.clover"
         coverage:
           file: coverage_integration.clover
-          format: clover
+          format: php-clover
