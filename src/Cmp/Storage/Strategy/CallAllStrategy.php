@@ -2,6 +2,8 @@
 
 namespace Cmp\Storage\Strategy;
 
+use Cmp\Storage\Exception\FileExistsException;
+
 /**
  * Class CallAllStrategy
  *
@@ -44,17 +46,11 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function get($path)
     {
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                if ($result = $adapter->get($path)) {
-                    return $result;
-                }
-            } catch (\Exception $e) {
-                $this->logAdapterException($adapter, $e);
-            }
-        }
+        $fn = function ($adapter) use ($path) {
+            return $adapter->get($path);
+        };
 
-        return false;
+        return $this->runOneAndLog($fn);
     }
 
     /**
@@ -68,17 +64,11 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function getStream($path)
     {
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                if ($result = $adapter->getStream($path)) {
-                    return $result;
-                }
-            } catch (\Exception $e) {
-                $this->logAdapterException($adapter, $e);
-            }
-        }
+        $fn = function ($adapter) use ($path) {
+            return $adapter->getStream($path);
+        };
 
-        return false;
+        return $this->runOneAndLog($fn);
     }
 
     /**
@@ -176,6 +166,26 @@ class CallAllStrategy extends AbstractStorageCallStrategy
 
         return $result;
     }
+
+    /**
+     * @param callable $fn
+     *
+     * @return mixed
+     * @throws FileExistsException
+     */
+    private function runOneAndLog(callable $fn)
+    {
+        foreach ($this->getAdapters() as $adapter) {
+            try {
+                return $fn($adapter);
+            } catch (\Exception $e) {
+                $this->logAdapterException($adapter, $e);
+            }
+        }
+
+        throw new FileExistsException();
+    }
+
 
     /**
      * @param $adapter
