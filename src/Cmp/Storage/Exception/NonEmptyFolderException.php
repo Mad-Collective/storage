@@ -1,11 +1,11 @@
 <?php
+
 namespace Cmp\Storage\Exception;
 
 /**
- * Created by PhpStorm.
- * User: jordimartin
- * Date: 08/07/16
- * Time: 11:11
+ * Class NonEmptyFolderException
+ *
+ * @package Cmp\Storage\Exception
  */
 class NonEmptyFolderException extends \Exception
 {

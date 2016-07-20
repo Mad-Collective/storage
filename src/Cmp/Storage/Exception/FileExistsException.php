@@ -2,10 +2,9 @@
 namespace Cmp\Storage\Exception;
 
 /**
- * Created by PhpStorm.
- * User: jordimartin
- * Date: 08/07/16
- * Time: 10:45
+ * Class FileExistsException
+ *
+ * @package Cmp\Storage\Exception
  */
 class FileExistsException extends \Exception
 {

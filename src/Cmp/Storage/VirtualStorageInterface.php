@@ -2,10 +2,9 @@
 namespace Cmp\Storage;
 
 /**
- * Created by PhpStorm.
- * User: jordimartin
- * Date: 08/07/16
- * Time: 10:40
+ * Interface VirtualStorageInterface
+ *
+ * @package Cmp\Storage
  */
 interface VirtualStorageInterface
 {

@@ -1,11 +1,11 @@
 <?php
+
 namespace Cmp\Storage\Exception;
 
 /**
- * Created by PhpStorm.
- * User: jordimartin
- * Date: 08/07/16
- * Time: 10:45
+ * Class FileNotFoundException
+ *
+ * @package Cmp\Storage\Exception
  */
 class FileNotFoundException extends \Exception
 {

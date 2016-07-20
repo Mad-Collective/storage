@@ -91,9 +91,7 @@ class StorageBuilder
 
         if (is_string($adapter)) {
             $this->addBuiltinAdapters();
-            if (!array_key_exists($adapter, self::$builtinAdapters)) {
-                throw new StorageAdapterNotFoundException("Builtin storage \"$adapter\" not found");
-            }
+            $this->assertBuiltInAdapterExists($adapter);
             $this->registerAdapter(self::$builtinAdapters[$adapter]);
 
             return $this;
@@ -110,7 +108,6 @@ class StorageBuilder
 
             return $this;
         }
-
 
         throw new InvalidStorageAdapterException("Invalid storage adapter: ".get_class($adapter));
     }
@@ -220,13 +217,29 @@ class StorageBuilder
         return new CallAllStrategy();
     }
 
+    /**
+     * @return DefaultLogger
+     */
     private function getDefaultLogger()
     {
         return LoggerFactory::create();
+
     }
 
     private function getDefaultBuiltinAdapter()
     {
         return 'FileSystem';
+    }
+
+    /**
+     * @param $adapter
+     *
+     * @throws StorageAdapterNotFoundException
+     */
+    private function assertBuiltInAdapterExists($adapter)
+    {
+        if (!array_key_exists($adapter, self::$builtinAdapters)) {
+            throw new StorageAdapterNotFoundException("Builtin storage \"$adapter\" not found");
+        }
     }
 }

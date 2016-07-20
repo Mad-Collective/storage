@@ -7,6 +7,11 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use SplDoublyLinkedList;
 
+/**
+ * Class AbstractStorageCallStrategy
+ *
+ * @package Cmp\Storage\Strategy
+ */
 abstract class AbstractStorageCallStrategy implements VirtualStorageInterface, LoggerAwareInterface
 {
 

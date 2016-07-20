@@ -1,15 +1,14 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: jordimartin
- * Date: 11/07/16
- * Time: 10:37
- */
 
 namespace Cmp\Storage;
 
 use Cmp\Storage\Strategy\AbstractStorageCallStrategy;
 
+/**
+ * Class VirtualStorage
+ *
+ * @package Cmp\Storage
+ */
 class VirtualStorage implements VirtualStorageInterface
 {
     /**
