@@ -26,7 +26,6 @@ class DefaultLogger implements LoggerInterface
     {
         $this->logWriter = $writer;
         $this->dateProvider = $dateProvider;
-        date_default_timezone_set('UTC');
     }
 
     /**
