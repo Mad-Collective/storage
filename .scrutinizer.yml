@@ -1,10 +1,11 @@
-build:
-  tests:
-    override:
-      -
-        command: 'bin/phpspec run -f progress -c phpspec.yml'
-        coverage:
-          file: 'coverage.clover'
-  environment:
-    php:
-      version: 5.6.9
+build: 
+  environment: 
+    php: 
+      version: "5.6.9"
+  tests: 
+    override: 
+      - 
+        command: "bin/phpspec run -f progress -c phpspec.yml"
+        coverage: 
+          file: coverage.clover
+          format: clover
