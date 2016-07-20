@@ -32,7 +32,7 @@ class StorageBuilderSpec extends ObjectBehavior
 
     public function it_has_a_default_logger()
     {
-        $this->getLogger()->shouldHaveType('Cmp\Storage\StdOuputLogger');
+        $this->getLogger()->shouldHaveType('Cmp\Storage\Log\DefaultLogger');
     }
 
     public function it_allows_add_builtin_adapters()
