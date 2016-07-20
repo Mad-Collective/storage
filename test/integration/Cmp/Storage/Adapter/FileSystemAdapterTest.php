@@ -123,6 +123,7 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
 
     private function getTempFileName()
     {
+        $path = "";
         while (true) {
             $filename = uniqid('TestAdapter', true).'.test';
             $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.$filename;

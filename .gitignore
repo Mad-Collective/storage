@@ -2,3 +2,4 @@
 .idea
 /bin/
 coverage.clover
+coverage_integration.clover
