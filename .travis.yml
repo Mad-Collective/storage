@@ -13,4 +13,6 @@ cache:
 install:
     - travis_retry composer install
 
-script: ./bin/phpspec run
+script:
+    - ./bin/phpspec run
+    - ./bin/phpunit
