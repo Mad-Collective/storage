@@ -5,7 +5,13 @@ namespace Cmp\Storage\Strategy;
 use Cmp\Storage\Exception\FileNotFoundException;
 use Cmp\Storage\Exception\InvalidPathException;
 use InvalidArgumentException;
+use PhpSpec\Exception\Exception;
 
+/**
+ * Class FallBackChainStrategy
+ *
+ * @package Cmp\Storage\Strategy
+ */
 class FallBackChainStrategy extends AbstractStorageCallStrategy
 {
     public function getStrategyName()
@@ -21,14 +27,11 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      */
     public function exists($path)
     {
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                return $adapter->exists($path);
-            } catch (\Exception $e) {
-                $this->log(LOG_ERR, "Adapter ".$adapter->getName()." fails on".__FUNCTION__, ['exception' => $e]);
-            }
-        }
-        throw new FileNotFoundException();
+        $fn = function ($adapter) use ($path) {
+            return $adapter->exists($path);
+        };
+
+        return $this->runChainAndLog($fn, new FileNotFoundException());
     }
 
     /**
@@ -41,14 +44,11 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      */
     public function get($path)
     {
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                return $adapter->get($path);
-            } catch (\Exception $e) {
-                $this->log(LOG_ERR, "Adapter ".$adapter->getName()." fails on".__FUNCTION__, ['exception' => $e]);
-            }
-        }
-        throw new FileNotFoundException();
+        $fn = function ($adapter) use ($path) {
+            return $adapter->get($path);
+        };
+
+        return $this->runChainAndLog($fn, new FileNotFoundException());
     }
 
     /**
@@ -62,14 +62,11 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      */
     public function getStream($path)
     {
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                return $adapter->getStream($path);
-            } catch (\Exception $e) {
-                $this->log(LOG_ERR, "Adapter ".$adapter->getName()." fails on".__FUNCTION__, ['exception' => $e]);
-            }
-        }
-        throw new FileNotFoundException();
+        $fn = function ($adapter) use ($path) {
+            return $adapter->getStream($path);
+        };
+
+        return $this->runChainAndLog($fn, new FileNotFoundException());
     }
 
     /**
@@ -85,14 +82,11 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      */
     public function rename($path, $newpath)
     {
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                return $adapter->rename($path);
-            } catch (\Exception $e) {
-                $this->log(LOG_ERR, "Adapter ".$adapter->getName()." fails on".__FUNCTION__, ['exception' => $e]);
-            }
-        }
-        throw new FileNotFoundException();
+        $fn = function ($adapter) use ($path, $newpath) {
+            return $adapter->rename($path, $newpath);
+        };
+
+        return $this->runChainAndLog($fn, new FileNotFoundException());
     }
 
     /**
@@ -106,14 +100,11 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      */
     public function delete($path)
     {
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                return $adapter->delete($path);
-            } catch (\Exception $e) {
-                $this->log(LOG_ERR, "Adapter ".$adapter->getName()." fails on".__FUNCTION__, ['exception' => $e]);
-            }
-        }
-        throw new FileNotFoundException();
+        $fn = function ($adapter) use ($path) {
+            return $adapter->delete($path);
+        };
+
+        return $this->runChainAndLog($fn, new FileNotFoundException());
     }
 
     /**
@@ -127,14 +118,11 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      */
     public function put($path, $contents)
     {
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                return $adapter->put($path);
-            } catch (\Exception $e) {
-                $this->log(LOG_ERR, "Adapter ".$adapter->getName()." fails on".__FUNCTION__, ['exception' => $e]);
-            }
-        }
-        throw new InvalidPathException();
+        $fn = function ($adapter) use ($path, $contents) {
+            return $adapter->put($path, $contents);
+        };
+
+        return $this->runChainAndLog($fn, new InvalidPathException());
     }
 
     /**
@@ -149,13 +137,42 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      */
     public function putStream($path, $resource)
     {
+        $fn = function ($adapter) use ($path, $resource) {
+            return $adapter->putStream($path, $resource);
+        };
+
+        return $this->runChainAndLog($fn, new InvalidArgumentException());
+    }
+
+    /**
+     * @param callable   $fn
+     * @param \Exception $exception
+     *
+     * @return mixed
+     * @throws \Exception
+     */
+    private function runChainAndLog(callable $fn, \Exception $exception)
+    {
         foreach ($this->getAdapters() as $adapter) {
             try {
-                return $adapter->putStream($path);
+                return $fn($adapter);
             } catch (\Exception $e) {
-                $this->log(LOG_ERR, "Adapter ".$adapter->getName()." fails on".__FUNCTION__, ['exception' => $e]);
+                $this->logAdapterException($adapter, $e);
             }
         }
-        throw new InvalidArgumentException();
+        throw $exception;
+    }
+
+    /**
+     * @param $adapter
+     * @param $e
+     */
+    private function logAdapterException($adapter, $e)
+    {
+        $this->log(
+            LOG_ERR,
+            'Adapter "'.$adapter->getName().'" fails.',
+            ['exception' => $e]
+        );
     }
 }

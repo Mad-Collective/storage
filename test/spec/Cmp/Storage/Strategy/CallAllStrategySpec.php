@@ -61,7 +61,7 @@ class CallAllStrategySpec extends ObjectBehavior
 
         $logger->log(
             LOG_ERR,
-            'Adapter "ADAPTER DUMMY" fails on delete call.',
+            'Adapter "ADAPTER DUMMY" fails.',
             Argument::any()
         )->shouldHaveBeenCalled();
     }

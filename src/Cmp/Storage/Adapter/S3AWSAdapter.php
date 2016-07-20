@@ -7,6 +7,11 @@ use Aws\S3\S3Client;
 use Cmp\Storage\AdapterInterface;
 use Cmp\Storage\Exception\InvalidStorageAdapterException;
 
+/**
+ * Class S3AWSAdapter
+ *
+ * @package Cmp\Storage\Adapter
+ */
 class S3AWSAdapter implements AdapterInterface
 {
     /**
@@ -28,28 +33,20 @@ class S3AWSAdapter implements AdapterInterface
         'AWS_BUCKET'
     ];
 
-
+    /**
+     * S3AWSAdapter constructor.
+     *
+     * @param array  $config
+     * @param string $bucket
+     *
+     * @throws InvalidStorageAdapterException
+     */
     public function __construct(array $config = [], $bucket = "")
     {
         if (empty($config) || empty($bucket)) {
-            foreach (self::$mandatoryEnvVars as $env) {
-                if (empty(getenv($env))) {
-                    throw new InvalidStorageAdapterException(
-                        'The env "'.
-                        $env.
-                        '" is missing. Set it to run this adapter as builtin or use the regular constructor.'
-                    );
-                }
-                $config = [
-                    'version' => 'latest',
-                    'region' => getenv('AWS_REGION'),
-                    'credentials' => [
-                        'key' => getenv('AWS_ACCESS_KEY_ID'),
-                        'secret' => getenv('AWS_SECRET_ACCESS_KEY'),
-                    ]
-                ];
-                $this->bucket = getenv('AWS_BUCKET');
-            }
+            $this->assertMandatoryConfigEnv();
+            $config = $this->getConfigFromEnv();
+            $this->bucket = getenv('AWS_BUCKET');
         }
         $this->client = new S3Client($config);
     }
@@ -208,8 +205,8 @@ class S3AWSAdapter implements AdapterInterface
     /**
      * Create a file or update if exists. It will create the missing folders.
      *
-     * @param string $path     The path to the file.
-     * @param string $contents The file contents.
+     * @param string          $path     The path to the file.
+     * @param string|resource $contents The file contents.
      *
      * @return bool True on success, false on failure.
      * @throws \Cmp\Storage\InvalidPathException
@@ -246,6 +243,8 @@ class S3AWSAdapter implements AdapterInterface
     /**
      * @param string $path
      * @param string $newpath
+     *
+     * @return bool
      */
     private function copy($path, $newpath)
     {
@@ -270,6 +269,8 @@ class S3AWSAdapter implements AdapterInterface
 
     /**
      * @param string $location
+     *
+     * @return bool
      */
     private function doesDirectoryExist($location)
     {
@@ -293,5 +294,39 @@ class S3AWSAdapter implements AdapterInterface
 
             throw $e;
         }
+    }
+
+    /**
+     * @throws InvalidStorageAdapterException
+     */
+    private function assertMandatoryConfigEnv()
+    {
+        foreach (self::$mandatoryEnvVars as $env) {
+            if (empty(getenv($env))) {
+                throw new InvalidStorageAdapterException(
+                    'The env "'.
+                    $env.
+                    '" is missing. Set it to run this adapter as builtin or use the regular constructor.'
+                );
+            }
+
+        }
+    }
+
+    /**
+     * @return array
+     */
+    private function getConfigFromEnv()
+    {
+        $config = [
+            'version' => 'latest',
+            'region' => getenv('AWS_REGION'),
+            'credentials' => [
+                'key' => getenv('AWS_ACCESS_KEY_ID'),
+                'secret' => getenv('AWS_SECRET_ACCESS_KEY'),
+            ]
+        ];
+
+        return $config;
     }
 }

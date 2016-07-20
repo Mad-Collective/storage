@@ -2,6 +2,11 @@
 
 namespace Cmp\Storage\Strategy;
 
+/**
+ * Class CallAllStrategy
+ *
+ * @package Cmp\Storage\Strategy
+ */
 class CallAllStrategy extends AbstractStorageCallStrategy
 {
 
@@ -20,22 +25,13 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function exists($path)
     {
-        $result = false;
+        $fn = function ($adapter) use ($path) {
+            return $adapter->exists($path);
+        };
 
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                $result = $adapter->exists($path) || $result;
-            } catch (\Exception $e) {
-                $this->log(
-                    LOG_ERR,
-                    'Adapter "'.$adapter->getName().'" fails on '.__FUNCTION__.' call.',
-                    ['exception' => $e]
-                );
-            }
-        }
-
-        return $result;
+        return $this->runAllAndLog($fn);
     }
+
 
     /**
      * Read a file.
@@ -48,23 +44,17 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function get($path)
     {
-        $result = false;
-
         foreach ($this->getAdapters() as $adapter) {
             try {
                 if ($result = $adapter->get($path)) {
                     return $result;
                 }
             } catch (\Exception $e) {
-                $this->log(
-                    LOG_ERR,
-                    'Adapter "'.$adapter->getName().'" fails on '.__FUNCTION__.' call.',
-                    ['exception' => $e]
-                );
+                $this->logAdapterException($adapter, $e);
             }
         }
 
-        return $result;
+        return false;
     }
 
     /**
@@ -78,23 +68,17 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function getStream($path)
     {
-        $result = false;
-
         foreach ($this->getAdapters() as $adapter) {
             try {
                 if ($result = $adapter->getStream($path)) {
                     return $result;
                 }
             } catch (\Exception $e) {
-                $this->log(
-                    LOG_ERR,
-                    'Adapter "'.$adapter->getName().'" fails on '.__FUNCTION__.' call.',
-                    ['exception' => $e]
-                );
+                $this->logAdapterException($adapter, $e);
             }
         }
 
-        return $result;
+        return false;
     }
 
     /**
@@ -110,21 +94,11 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function rename($path, $newpath)
     {
-        $result = false;
+        $fn = function ($adapter) use ($path, $newpath) {
+            return $adapter->rename($path, $newpath);
+        };
 
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                $result = $adapter->rename($path, $newpath) || $result;
-            } catch (\Exception $e) {
-                $this->log(
-                    LOG_ERR,
-                    'Adapter "'.$adapter->getName().'" fails on '.__FUNCTION__.' call.',
-                    ['exception' => $e]
-                );
-            }
-        }
-
-        return $result;
+        return $this->runAllAndLog($fn);
     }
 
     /**
@@ -138,20 +112,11 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function delete($path)
     {
-        $result = false;
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                $result = $adapter->delete($path) || $result;
-            } catch (\Exception $e) {
-                $this->log(
-                    LOG_ERR,
-                    'Adapter "'.$adapter->getName().'" fails on '.__FUNCTION__.' call.',
-                    ['exception' => $e]
-                );
-            }
-        }
+        $fn = function ($adapter) use ($path) {
+            return $adapter->delete($path);
+        };
 
-        return $result;
+        return $this->runAllAndLog($fn);
     }
 
     /**
@@ -165,21 +130,11 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function put($path, $contents)
     {
-        $result = false;
+        $fn = function ($adapter) use ($path, $contents) {
+            return $adapter->put($path, $contents);
+        };
 
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                $result = $adapter->put($path, $contents) || $result;
-            } catch (\Exception $e) {
-                $this->log(
-                    LOG_ERR,
-                    'Adapter "'.$adapter->getName().'" fails on '.__FUNCTION__.' call.',
-                    ['exception' => $e]
-                );
-            }
-        }
-
-        return $result;
+        return $this->runAllAndLog($fn);
     }
 
     /**
@@ -194,20 +149,44 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function putStream($path, $resource)
     {
+        $fn = function ($adapter) use ($path, $resource) {
+            return $adapter->putStream($path, $resource);
+        };
+
+        return $this->runAllAndLog($fn);
+    }
+
+
+    /**
+     * @param callable $fn
+     *
+     * @return bool
+     */
+    private function runAllAndLog(callable $fn)
+    {
         $result = false;
 
         foreach ($this->getAdapters() as $adapter) {
             try {
-                $result = $adapter->putStream($path, $resource) || $result;
+                $result = $fn($adapter) || $result;
             } catch (\Exception $e) {
-                $this->log(
-                    LOG_ERR,
-                    'Adapter "'.$adapter->getName().'" fails on '.__FUNCTION__.' call.',
-                    ['exception' => $e]
-                );
+                $this->logAdapterException($adapter, $e);
             }
         }
 
         return $result;
+    }
+
+    /**
+     * @param $adapter
+     * @param $e
+     */
+    private function logAdapterException($adapter, $e)
+    {
+        $this->log(
+            LOG_ERR,
+            'Adapter "'.$adapter->getName().'" fails.',
+            ['exception' => $e]
+        );
     }
 }

@@ -4,6 +4,11 @@ namespace Cmp\Storage\Adapter;
 use Cmp\Storage\Exception\FileNotFoundException;
 use Cmp\Storage\Exception\InvalidPathException;
 
+/**
+ * Class FileSystemAdapter
+ *
+ * @package Cmp\Storage\Adapter
+ */
 class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
 {
 

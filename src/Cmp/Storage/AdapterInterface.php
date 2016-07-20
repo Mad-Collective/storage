@@ -2,6 +2,11 @@
 
 namespace Cmp\Storage;
 
+/**
+ * Interface AdapterInterface
+ *
+ * @package Cmp\Storage
+ */
 interface AdapterInterface extends VirtualStorageInterface
 {
     /**

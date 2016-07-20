@@ -66,7 +66,7 @@ class FallBackChainStrategySpec extends ObjectBehavior
         $adapter2->delete($path)->willReturn(false);
         $logger->log(
             LOG_ERR,
-            'The adapter "ADAPTER DUMMY" is failing on delete call',
+            'The adapter "ADAPTER DUMMY" is failing.',
             ['exception' =>  Argument::any()]
         );
         $this->delete($path)->shouldBe(false);
