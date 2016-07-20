@@ -126,7 +126,7 @@ class S3AWSAdapter implements AdapterInterface
     /**
      * Read an object and normalize the response.
      *
-     * @param $path
+     * @param string $path
      *
      * @return array|bool
      */
@@ -243,6 +243,10 @@ class S3AWSAdapter implements AdapterInterface
     }
 
 
+    /**
+     * @param string $path
+     * @param string $newpath
+     */
     private function copy($path, $newpath)
     {
         $command = $this->client->getCommand(
@@ -264,6 +268,9 @@ class S3AWSAdapter implements AdapterInterface
         return true;
     }
 
+    /**
+     * @param string $location
+     */
     private function doesDirectoryExist($location)
     {
         $command = $this->client->getCommand(
