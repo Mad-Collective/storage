@@ -1,7 +1,6 @@
 <?php
-use PHPUnit\Framework\TestCase;
 
-class S3AWSAdapterTest extends TestCase
+class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
 {
     /**
      * @var \Cmp\Storage\Adapter\S3AWSAdapter

@@ -1,8 +1,8 @@
 <?php
 use Cmp\Storage\Adapter\FileSystemAdapter;
-use PHPUnit\Framework\TestCase;
 
-class FileSystemAdapterTest extends TestCase
+
+class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
 {
 
     /**

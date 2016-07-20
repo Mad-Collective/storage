@@ -9,3 +9,8 @@ build:
         coverage: 
           file: coverage.clover
           format: clover
+      -
+        command: "bin/phpunit --coverage-clover coverage_integration.clover"
+        coverage:
+          file: coverage_integration.clover
+          format: clover
