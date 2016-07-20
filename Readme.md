@@ -3,6 +3,6 @@
 
 Virtual storage
 
-### Requeriments ###
+### Requirements ###
 * php 5.6
 
