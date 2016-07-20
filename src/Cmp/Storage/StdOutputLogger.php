@@ -11,7 +11,7 @@ namespace Cmp\Storage;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
-class StdOuputLogger implements LoggerInterface
+class StdOutputLogger implements LoggerInterface
 {
 
 
