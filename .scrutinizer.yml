@@ -5,4 +5,6 @@ build:
         command: 'bin/phpspec run -f progress -c phpspec.yml'
         coverage:
           file: 'coverage.clover'
-          format: 'php-clover'
+    environment:
+        php:
+            version: 5.6.9
