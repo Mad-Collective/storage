@@ -24,6 +24,27 @@ $s->put('/tmp/test.txt',"this is a test");
 
 
 ```
+
+## Installation
+
+Add this repo to your composer.json
+
+````json
+"repositories": {
+  "cmp/storage": {
+    "type": "vcs",
+    "url": "git@github.com:CMProductions/storage.git"
+  }
+}
+````
+
+Then require it as usual:
+
+``` bash
+composer require "cmp/storage"
+```
+
+
 ##Functions available from storage
 
 ### Exists
