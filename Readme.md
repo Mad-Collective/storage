@@ -52,9 +52,9 @@ __*Note:*__ Use stream functions for big files.
 
 ##Adapters
 
-It provides a generic API for handling common tasks across multiple file storage engines. If you want add a new one, you have implements ``\Cmp\Storage\AdapterInterface``.
+It provides a generic API for handling common tasks across multiple file storage engines. If you want add a new one, you have to implements ``\Cmp\Storage\AdapterInterface``.
 
-The adapter interface allows access to 6 methods:
+The adapter interface contains these methods:
 
 * `exists`
 * `get`
@@ -70,11 +70,12 @@ The adapter interface allows access to 6 methods:
 This libs is shipped with two builtin adapters ready to use.
 
 * FileSystem: This adapter interacts directly with the host filesystem.
-* S3AWS: This adapter interacts with Amazon S3 service. (You have to add some env parameters to use it)
+* S3AWS: This adapter interacts with Amazon S3 service. (You must add some env parameters to use it)
 
 ##Strategies
 
-It allows you specify different call strategies when you register more than one adapter. If you want create a custom call strategy you must extend ``\Cmp\Storage\Strategy\AbstractStorageCallStrategies``
+It allows you specify different call strategies when you have been registered more than one adapter.
+If you want create a custom call strategy you must extend ``\Cmp\Storage\Strategy\AbstractStorageCallStrategies``
 
 __*Note:*__ By default the lib uses the CallAllStrategy.
 
