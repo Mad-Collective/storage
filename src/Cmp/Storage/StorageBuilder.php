@@ -2,9 +2,13 @@
 
 namespace Cmp\Storage;
 
+use Cmp\Storage\Date\DefaultDateProvider;
 use Cmp\Storage\Exception\InvalidStorageAdapterException;
 use Cmp\Storage\Exception\StorageAdapterNotFoundException;
 use Cmp\Storage\Exception\ThereAreNoAdaptersAvailableException;
+use Cmp\Storage\Log\DefaultLogger;
+use Cmp\Storage\Log\LoggerFactory;
+use Cmp\Storage\Log\StdOutputLogger;
 use Cmp\Storage\Strategy\AbstractStorageCallStrategy;
 
 use Cmp\Storage\Strategy\CallAllStrategy;
@@ -214,11 +218,12 @@ class StorageBuilder
     }
 
     /**
-     * @return StdOutputLogger
+     * @return DefaultLogger
      */
     private function getDefaultLogger()
     {
-        return new StdOutputLogger();
+        return LoggerFactory::create();
+
     }
 
     private function getDefaultBuiltinAdapter()

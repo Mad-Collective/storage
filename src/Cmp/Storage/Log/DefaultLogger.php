@@ -1,23 +1,31 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: jordimartin
- * Date: 19/07/16
- * Time: 11:14
- */
 
-namespace Cmp\Storage;
+namespace Cmp\Storage\Log;
 
+use Cmp\Storage\Date\DateProviderInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
-class StdOutputLogger implements LoggerInterface
+class DefaultLogger implements LoggerInterface
 {
+    /**
+     * @var LogWriterInterface
+     */
+    private $logWriter;
 
+    /**
+     * @var DateProviderInterface
+     */
+    private $dateProvider;
 
-    public function __construct()
+    /**
+     * DefaultLogger constructor.
+     * @param LogWriterInterface $writer
+     */
+    public function __construct(LogWriterInterface $writer, DateProviderInterface $dateProvider)
     {
-        date_default_timezone_set('UTC');
+        $this->logWriter = $writer;
+        $this->dateProvider = $dateProvider;
     }
 
     /**
@@ -147,7 +155,7 @@ class StdOutputLogger implements LoggerInterface
      */
     public function log($level, $message, array $context = array())
     {
-        file_put_contents('php://stdout', $this->formatMessage($level, $message, $context), FILE_APPEND);
+        $this->logWriter->write($this->formatMessage($level, $message, $context));
     }
 
     protected function interpolate($message, array $context = array())
@@ -163,8 +171,12 @@ class StdOutputLogger implements LoggerInterface
     }
 
 
+    public function getCurrentDate() {
+        return $this->dateProvider->getDate('Y-m-d H:i:s');
+    }
+
     protected function formatMessage($level, $message, array $context = array())
     {
-        return '['.date('Y-m-d H:i:s').'] ['.$level.'] '.$this->interpolate($message, $context).PHP_EOL;
+        return '['.$this->getCurrentDate().'] ['.$level.'] '.$this->interpolate($message, $context).PHP_EOL;
     }
 }
