@@ -18,7 +18,7 @@ use Psr\Log\LoggerInterface;
  *
  * @package Cmp\Storage
  */
-class StorageBuilder
+class StorageBuilder implements LoggerAwareInterface
 {
 
     /**
@@ -53,6 +53,7 @@ class StorageBuilder
 
 
     /**
+     * Set a custom strategy
      * @param AbstractStorageCallStrategy $strategy
      *
      * @return $this
@@ -65,6 +66,7 @@ class StorageBuilder
     }
 
     /**
+     * Set custom logger
      * @param LoggerInterface $logger
      *
      * @return $this
@@ -77,14 +79,14 @@ class StorageBuilder
     }
 
     /**
+     * Add a new adapter
      * @param       $adapter
-     * @param array $config
      *
      * @return $this
      * @throws InvalidStorageAdapterException
      * @throws StorageAdapterNotFoundException
      */
-    public function addAdapter($adapter, array $config = [])
+    public function addAdapter($adapter)
     {
 
         if (is_string($adapter)) {
@@ -106,6 +108,7 @@ class StorageBuilder
 
 
     /**
+     * Build the virtual storage
      * @param                 $callStrategy
      * @param LoggerInterface $logger
      *
@@ -134,6 +137,7 @@ class StorageBuilder
     }
 
     /**
+     * Get the current strategy
      * @return mixed
      */
     public function getStrategy()
@@ -147,6 +151,7 @@ class StorageBuilder
 
 
     /**
+     * Get the current Logger
      * @return mixed
      */
     public function getLogger()
@@ -158,6 +163,14 @@ class StorageBuilder
         return $this->logger;
     }
 
+    /**
+     * Check if one or more adapters has been loaded
+     * @return bool
+     */
+    public function hasLoadedAdapters()
+    {
+        return !empty($this->adapters);
+    }
 
     /**
      * @param AdapterInterface $adapter
@@ -170,13 +183,6 @@ class StorageBuilder
         $this->adapters[] = $adapter;
     }
 
-    /**
-     * @return bool
-     */
-    public function hasLoadedAdapters()
-    {
-        return !empty($this->adapters);
-    }
 
     /**
      * @return $this

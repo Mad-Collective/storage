@@ -284,7 +284,7 @@ class S3AWSAdapter implements AdapterInterface
             'listObjects',
             [
                 'Bucket' => $this->bucket,
-                'Prefix' => rtrim($location, '/').'/',
+                'Prefix' => trim($location, '/').'/',
                 'MaxKeys' => 1,
             ]
         );
@@ -294,11 +294,8 @@ class S3AWSAdapter implements AdapterInterface
 
             return $result['Contents'] || $result['CommonPrefixes'];
         } catch (S3Exception $e) {
-            if ($e->getStatusCode() === 403) {
-                return false;
-            }
+            return false;
 
-            throw $e;
         }
     }
 

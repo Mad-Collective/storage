@@ -5,7 +5,6 @@ namespace Cmp\Storage\Strategy;
 use Cmp\Storage\Exception\FileNotFoundException;
 use Cmp\Storage\Exception\InvalidPathException;
 use InvalidArgumentException;
-use PhpSpec\Exception\Exception;
 
 /**
  * Class FallBackChainStrategy
