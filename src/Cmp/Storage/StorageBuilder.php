@@ -2,16 +2,14 @@
 
 namespace Cmp\Storage;
 
-use Cmp\Storage\Date\DefaultDateProvider;
+use Cmp\Storage\Adapter\FileSystemAdapter;
 use Cmp\Storage\Exception\InvalidStorageAdapterException;
 use Cmp\Storage\Exception\StorageAdapterNotFoundException;
 use Cmp\Storage\Exception\ThereAreNoAdaptersAvailableException;
 use Cmp\Storage\Log\DefaultLogger;
-use Cmp\Storage\Log\LoggerFactory;
-use Cmp\Storage\Log\StdOutputLogger;
+use Cmp\Storage\Log\DefaultLoggerFactory;
 use Cmp\Storage\Strategy\AbstractStorageCallStrategy;
-
-use Cmp\Storage\Strategy\CallAllStrategy;
+use Cmp\Storage\Strategy\DefaultStrategyFactory;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 
@@ -99,12 +97,6 @@ class StorageBuilder
 
         if ($adapter instanceof AdapterInterface) {
             $this->registerAdapter($adapter);
-
-            return $this;
-        }
-
-        if ($adapter instanceof FactoryAdapterInterface) {
-            $this->registerAdapter($adapter->create($config));
 
             return $this;
         }
@@ -214,7 +206,7 @@ class StorageBuilder
      */
     private function getDefaultCallStrategy()
     {
-        return new CallAllStrategy();
+        return DefaultStrategyFactory::create();
     }
 
     /**
@@ -222,13 +214,13 @@ class StorageBuilder
      */
     private function getDefaultLogger()
     {
-        return LoggerFactory::create();
+        return DefaultLoggerFactory::create();
 
     }
 
     private function getDefaultBuiltinAdapter()
     {
-        return 'FileSystem';
+        return FileSystemAdapter::NAME;
     }
 
     /**

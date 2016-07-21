@@ -12,6 +12,10 @@ use Cmp\Storage\Exception\InvalidPathException;
 class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
 {
 
+    /**
+     * Adapter Name
+     */
+    const NAME = "FileSystem";
 
     /**
      * Get Adapter name
@@ -20,7 +24,7 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
      */
     public function getName()
     {
-        return "FileSystem";
+        return self::NAME;
     }
 
     /**

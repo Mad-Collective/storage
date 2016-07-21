@@ -15,6 +15,11 @@ use Cmp\Storage\Exception\InvalidStorageAdapterException;
 class S3AWSAdapter implements AdapterInterface
 {
     /**
+     * Adapter Name
+     */
+    const NAME = "S3AWS";
+
+    /**
      * @var S3Client
      */
     private $client;
@@ -58,8 +63,9 @@ class S3AWSAdapter implements AdapterInterface
      */
     public function getName()
     {
-        return "S3AWS";
+        return self::NAME;
     }
+
 
     /**
      * Check whether a file exists.

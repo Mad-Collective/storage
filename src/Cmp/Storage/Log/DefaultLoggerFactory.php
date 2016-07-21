@@ -5,7 +5,7 @@ namespace Cmp\Storage\Log;
 
 use Cmp\Storage\Date\DefaultDateProvider;
 
-class LoggerFactory
+class DefaultLoggerFactory
 {
     /**
      * @return DefaultLogger
