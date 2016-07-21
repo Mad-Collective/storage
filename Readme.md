@@ -13,8 +13,6 @@ Storage is a filesystem abstraction which allows you to easily swap out a local 
 //faster way
 (new StorageBuilder())->build()->put('/tmp/test.txt',"this is a test");
 
-
-
 //more customized
 $sb = new StorageBuilder();
 $s = $sb->addAdapter('S3AWS')
@@ -23,6 +21,7 @@ $s = $sb->addAdapter('S3AWS')
     ->setLogger(new Logger())
     ->build(new \Cmp\Storage\Strategy\FallBackChainStrategy());
 $s->put('/tmp/test.txt',"this is a test");
+
 
 ```
 ##Functions available from storage
@@ -119,8 +118,8 @@ __Non fluid calls:__
 
 ### Contribution
 
-Fork the repo.
-Fix an issue or add a new adapter or improve something or whatever you want.
-Follow the PSR-2 style.
-Run the tests. (add more tests if is needed).
-Make a pull request.
+* Fork the repo.
+* Fix an issue or add a new adapter or improve something or whatever you want.
+* Follow the PSR-2 style.
+* Run the tests. (add more tests if is needed).
+* Make a pull request.
