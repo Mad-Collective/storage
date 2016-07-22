@@ -3,16 +3,28 @@
 namespace Cmp\Storage\Date;
 
 
+use DateTime;
+use DateTimeZone;
+
 class DefaultDateProvider implements DateProviderInterface
 {
 
+
+    public function __construct()
+    {
+        if (empty(ini_get('date.timezone'))){
+            date_default_timezone_set('UTC');
+        }
+    }
+
     /**
      * @param string $format
-     * @return mixed
+     *
+     * @return string
      */
-    public function getDate($format, $timezone = 'UTC')
+    public function getDate($format)
     {
-        date_default_timezone_set($timezone);
-        return date($format);
+        $dt = new DateTime("now", new DateTimeZone('UTC'));
+        return $dt->format($format);
     }
 }
