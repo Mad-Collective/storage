@@ -2,7 +2,7 @@
 
 namespace Cmp\Storage\Strategy;
 
-use Cmp\Storage\Exception\FileExistsException;
+use Cmp\Storage\Exception\FileNotFoundException;
 
 /**
  * Class CallAllStrategy
@@ -168,22 +168,28 @@ class CallAllStrategy extends AbstractStorageCallStrategy
     }
 
     /**
+     * Gets one file from all the adapters
+     * 
      * @param callable $fn
      *
-     * @return mixed
-     * @throws FileExistsException
+     * @throws FileNotFoundException
+     *
+     * @return string
      */
     private function runOneAndLog(callable $fn)
     {
         foreach ($this->getAdapters() as $adapter) {
             try {
-                return $fn($adapter);
+                $file = $fn($adapter);
+                if ($file) {
+                    return $file;
+                }
             } catch (\Exception $e) {
                 $this->logAdapterException($adapter, $e);
             }
         }
 
-        throw new FileExistsException();
+        throw new FileNotFoundException();
     }
 
 

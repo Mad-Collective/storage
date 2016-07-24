@@ -141,6 +141,16 @@ class CallAllStrategySpec extends ObjectBehavior
         $adapter3->getStream($path)->shouldNotHaveBeenCalled();
     }
 
+    public function it_throws_an_exception_if_a_file_cannot_be_found_on_any_adapter(
+        AdapterInterface $adapter1,
+        AdapterInterface $adapter2
+    ) {
+        $path = "/b/c";
+        $adapter1->get($path)->willReturn(false);
+        $adapter2->get($path)->willReturn(false);
+
+        $this->shouldThrow(new FileNotFoundException())->duringGet($path);
+    }
 
     public function it_wraps_the_put_and_putStream_calls(
         AdapterInterface $adapter1,
