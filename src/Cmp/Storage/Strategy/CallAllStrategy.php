@@ -181,7 +181,7 @@ class CallAllStrategy extends AbstractStorageCallStrategy
         foreach ($this->getAdapters() as $adapter) {
             try {
                 $file = $fn($adapter);
-                if ($file) {
+                if ($file !== false) {
                     return $file;
                 }
             } catch (\Exception $e) {
