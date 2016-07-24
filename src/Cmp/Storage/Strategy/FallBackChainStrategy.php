@@ -2,9 +2,8 @@
 
 namespace Cmp\Storage\Strategy;
 
+use Cmp\Storage\AdapterInterface;
 use Cmp\Storage\Exception\FileNotFoundException;
-use Cmp\Storage\Exception\InvalidPathException;
-use InvalidArgumentException;
 
 /**
  * Class FallBackChainStrategy
@@ -21,16 +20,15 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
     /**
      * @param string $path
      *
-     * @return mixed
-     * @throws FileNotFoundException
+     * @return bool
      */
     public function exists($path)
     {
-        $fn = function ($adapter) use ($path) {
+        $fn = function (AdapterInterface $adapter) use ($path) {
             return $adapter->exists($path);
         };
 
-        return $this->runChainAndLog($fn, new FileNotFoundException());
+        return $this->runChainAndLog($fn);
     }
 
     /**
@@ -43,11 +41,11 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      */
     public function get($path)
     {
-        $fn = function ($adapter) use ($path) {
+        $fn = function (AdapterInterface $adapter) use ($path) {
             return $adapter->get($path);
         };
 
-        return $this->runChainAndLog($fn, new FileNotFoundException());
+        return $this->runChainAndLog($fn);
     }
 
     /**
@@ -61,11 +59,11 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      */
     public function getStream($path)
     {
-        $fn = function ($adapter) use ($path) {
+        $fn = function (AdapterInterface $adapter) use ($path) {
             return $adapter->getStream($path);
         };
 
-        return $this->runChainAndLog($fn, new FileNotFoundException());
+        return $this->runChainAndLog($fn);
     }
 
     /**
@@ -81,11 +79,11 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      */
     public function rename($path, $newpath)
     {
-        $fn = function ($adapter) use ($path, $newpath) {
+        $fn = function (AdapterInterface $adapter) use ($path, $newpath) {
             return $adapter->rename($path, $newpath);
         };
 
-        return $this->runChainAndLog($fn, new FileNotFoundException());
+        return $this->runChainAndLog($fn);
     }
 
     /**
@@ -99,11 +97,11 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      */
     public function delete($path)
     {
-        $fn = function ($adapter) use ($path) {
+        $fn = function (AdapterInterface $adapter) use ($path) {
             return $adapter->delete($path);
         };
 
-        return $this->runChainAndLog($fn, new FileNotFoundException());
+        return $this->runChainAndLog($fn);
     }
 
     /**
@@ -117,11 +115,11 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      */
     public function put($path, $contents)
     {
-        $fn = function ($adapter) use ($path, $contents) {
+        $fn = function (AdapterInterface $adapter) use ($path, $contents) {
             return $adapter->put($path, $contents);
         };
 
-        return $this->runChainAndLog($fn, new InvalidPathException());
+        return $this->runChainAndLog($fn);
     }
 
     /**
@@ -136,30 +134,45 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      */
     public function putStream($path, $resource)
     {
-        $fn = function ($adapter) use ($path, $resource) {
+        $fn = function (AdapterInterface $adapter) use ($path, $resource) {
             return $adapter->putStream($path, $resource);
         };
 
-        return $this->runChainAndLog($fn, new InvalidArgumentException());
+        return $this->runChainAndLog($fn);
     }
 
     /**
-     * @param callable   $fn
-     * @param \Exception $exception
+     * Gets the more non false result, or throws an exception if all adapters fail
+     * 
+     * @param callable $fn
+     *
+     * @throws \Exception
      *
      * @return mixed
-     * @throws \Exception
      */
-    private function runChainAndLog(callable $fn, \Exception $exception)
+    private function runChainAndLog(callable $fn)
     {
+        $firstException = false;
         foreach ($this->getAdapters() as $adapter) {
             try {
-                return $fn($adapter);
-            } catch (\Exception $e) {
-                $this->logAdapterException($adapter, $e);
+                $result = $fn($adapter);
+                if ($result !== false) {
+                    return $result;
+                }
+            } catch (\Exception $exception) {
+                if (!$firstException) {
+                    $firstException = $exception;
+                }
+                $this->logAdapterException($adapter, $exception);
             }
         }
-        throw $exception;
+
+        // Result will be set if at least one adapters executed the operation without exceptions
+        if (isset($result)) {
+            return $result;
+        }
+
+        throw $firstException;
     }
 
     /**
