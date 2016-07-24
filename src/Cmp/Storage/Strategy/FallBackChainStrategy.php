@@ -142,11 +142,12 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
     }
 
     /**
-     * Gets the more non false result, or throws an exception if all adapters fail
+     * Executes the operation in all adapters, returning on the first success or false if at least one executed the
+     * operation without raising exceptions
      * 
      * @param callable $fn
      *
-     * @throws \Exception
+     * @throws \Exception If all adapters raised exceptions, the first one will be thrown
      *
      * @return mixed
      */
