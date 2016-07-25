@@ -12,29 +12,42 @@ class FallBackChainStrategySpec extends ObjectBehavior
 {
     function let(AdapterInterface $adapter1, AdapterInterface $adapter2, AdapterInterface $adapter3)
     {
-
+        $adapter1->getName()->willReturn("ADAPTER DUMMY");
+        $adapter2->getName()->willReturn("ADAPTER DUMMY");
+        $adapter3->getName()->willReturn("ADAPTER DUMMY");
         $this->addAdapters([$adapter1, $adapter2, $adapter3]);
         $this->shouldHaveType('Cmp\Storage\Strategy\FallBackChainStrategy');
     }
 
-
-    function it_always_calls_the_first_adapter(
+    function it_returns_the_first_non_failed_check_for_an_existing_file(
         AdapterInterface $adapter1,
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
         $path = "a/b/c";
-        $adapter1->getName()->willReturn("A1");
-        $adapter2->getName()->willReturn("A2");
-        $adapter3->getName()->willReturn("A3");
+        $adapter1->exists($path)->willReturn(false);
+        $adapter2->exists($path)->willReturn(true);
 
-
-        $adapter1->exists($path)->willReturn(true);
         $this->exists($path)->shouldBe(true);
-        $adapter2->exists($path)->shouldNotHaveBeenCalled();
+
         $adapter3->exists($path)->shouldNotHaveBeenCalled();
+        $adapter1->getName()->shouldNotHaveBeenCalled();
+        $adapter2->getName()->shouldNotHaveBeenCalled();
+        $adapter3->getName()->shouldNotHaveBeenCalled();
     }
 
+    function it_fails_with_a_false_if_no_adapter_cannot_has_the_file_available(
+        AdapterInterface $adapter1,
+        AdapterInterface $adapter2,
+        AdapterInterface $adapter3
+    ) {
+        $path = "a/b/c";
+        $adapter1->exists($path)->willReturn(false);
+        $adapter2->exists($path)->willReturn(false);
+        $adapter3->exists($path)->willReturn(false);
+
+        $this->exists($path)->shouldBe(false);
+    }
 
     function it_only_calls_the_following_adapter_if_the_previous_fails(
         AdapterInterface $adapter1,
@@ -44,10 +57,39 @@ class FallBackChainStrategySpec extends ObjectBehavior
         $path = "a/b/c";
         $adapter1->getName()->willReturn("ADAPTER DUMMY");
         $adapter1->get($path)->willThrow(new FileNotFoundException());
-
         $adapter2->get($path)->willReturn("hi!");
+
         $this->get($path)->shouldBe("hi!");
-        $adapter3->exists($path)->shouldNotHaveBeenCalled();
+
+        $adapter3->get($path)->shouldNotHaveBeenCalled();
+    }
+
+    function it_fails_with_false_if_all_the_adapters_fail_but_at_least_one_tried(
+        AdapterInterface $adapter1,
+        AdapterInterface $adapter2,
+        AdapterInterface $adapter3
+    ) {
+        $path = "a/b/c";
+        $adapter1->get($path)->willThrow(new \LogicException());
+        $adapter2->get($path)->willReturn(false);
+        $adapter3->get($path)->willThrow(new \RuntimeException());
+
+        $this->get($path)->shouldReturn(false);
+    }
+
+    function it_fails_with_the_first_exception_if_all_the_adapters_found_errors(
+        AdapterInterface $adapter1,
+        AdapterInterface $adapter2,
+        AdapterInterface $adapter3
+    ) {
+        $path = "a/b/c";
+        $firstException = new \LogicException();
+
+        $adapter1->get($path)->willThrow($firstException);
+        $adapter2->get($path)->willThrow(new \OutOfRangeException());
+        $adapter3->get($path)->willThrow(new \RuntimeException());
+
+        $this->shouldThrow($firstException)->duringGet($path);
     }
 
     function it_logs_any_problem_with_the_adapters(
@@ -58,10 +100,8 @@ class FallBackChainStrategySpec extends ObjectBehavior
         $path = "a/b/c";
         $this->setLogger($logger);
 
-
         $adapter1->delete($path)->willThrow(new FileNotFoundException());
         $adapter1->getName()->willReturn("ADAPTER DUMMY");
-
 
         $adapter2->delete($path)->willReturn(false);
         $logger->log(
@@ -90,7 +130,6 @@ class FallBackChainStrategySpec extends ObjectBehavior
 
         $this->shouldThrow('Cmp\Storage\Exception\FileNotFoundException')->during('get', [$path]);
     }
-
 
     public function it_wraps_the_rename_call(
         AdapterInterface $adapter1,
