@@ -3,14 +3,14 @@
   "description": "Virtual storage abstraction layer",
   "type": "lib",
   "require": {
-    "aws/aws-sdk-php": "^3.0.0",
     "psr/log": "^1.0"
   },
   "require-dev": {
     "phpspec/phpspec": "^2.5",
     "phpunit/phpunit": "4.8.*",
     "squizlabs/php_codesniffer": "2.*",
-    "henrikbjorn/phpspec-code-coverage": "2.*"
+    "henrikbjorn/phpspec-code-coverage": "2.*",
+    "aws/aws-sdk-php": "^3.0.0"
   },
   "license": "MIT",
   "config": {
