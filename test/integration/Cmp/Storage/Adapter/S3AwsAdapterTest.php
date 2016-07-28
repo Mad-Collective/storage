@@ -32,7 +32,6 @@ class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
     }
 
 
-
     public function testFileGetStream()
     {
         $filename = $this->getTempFileName();
@@ -59,6 +58,25 @@ class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
     }
 
 
+    public function testFileRenameWithOverWrite()
+    {
+        $filenameOld = $this->getTempFileName();
+        $filenameNew = $this->getTempFileName();
+        $this->assertTrue($this->s3Adapter->put($filenameOld, "testFileRenameWithOverWrite"));
+        $this->assertTrue($this->s3Adapter->put($filenameNew, "testFileRenameWithOverWrite"));
+
+        try {
+            $this->s3Adapter->rename($filenameOld, $filenameNew);
+            $this->assertTrue(false);
+        } catch (\Cmp\Storage\Exception\FileExistsException $e) {
+            $this->assertTrue(true);
+        }
+
+        $this->assertTrue($this->s3Adapter->rename($filenameOld, $filenameNew, true));
+        $this->assertFalse($this->s3Adapter->exists($filenameOld));
+        $this->assertTrue($this->s3Adapter->exists($filenameNew));
+    }
+
     public function testFileDelete()
     {
         $filename = $this->getTempFileName();
@@ -68,7 +86,6 @@ class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($this->s3Adapter->delete($filename));
         $this->assertFalse($this->s3Adapter->exists($filename));
     }
-
 
 
     public function testFilePutStream()
@@ -84,7 +101,6 @@ class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($this->s3Adapter->exists($filename));
         $this->assertEquals($content, $this->s3Adapter->get($filename));
     }
-
 
 
     public function testParentPathCreation()

@@ -20,33 +20,33 @@ abstract class AbstractStorageCallStrategy implements VirtualStorageInterface, L
      * @var LoggerInterface
      */
     private $logger;
-    private $splList;
+    private $adapters;
 
 
     public function __construct()
     {
-        $this->initList();
+        $this->adapters = [];
     }
 
     public function addAdapter(AdapterInterface $adapter)
     {
-        $this->splList->push($adapter);
+        $this->adapters[] = $adapter;
     }
 
-    public function addAdapters(array $adapters)
+    public function setAdapters(array $adapters)
     {
-        $this->initList();
+        $this->adapters = [];
         foreach ($adapters as $adapter) {
             $this->addAdapter($adapter);
         }
     }
 
     /**
-     * @return \SplStack
+     * @return VirtualStorageInterface[]
      */
     public function getAdapters()
     {
-        return $this->splList;
+        return $this->adapters;
     }
 
     /**
@@ -79,9 +79,5 @@ abstract class AbstractStorageCallStrategy implements VirtualStorageInterface, L
 
     abstract public function getStrategyName();
 
-    private function initList()
-    {
-        $this->splList = new \SplDoublyLinkedList();
-        $this->splList->setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO);
-    }
+
 }

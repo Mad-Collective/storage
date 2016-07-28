@@ -57,8 +57,6 @@ interface VirtualStorageInterface
      *
      * @param string $path
      *
-     * @throws \Cmp\Storage\FileNotFoundException
-     *
      * @return bool True on success, false on failure.
      */
     public function delete($path);

@@ -5,6 +5,7 @@ namespace Cmp\Storage\Adapter;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use Cmp\Storage\AdapterInterface;
+use Cmp\Storage\Exception\FileExistsException;
 use Cmp\Storage\Exception\InvalidStorageAdapterException;
 
 /**
@@ -162,13 +163,17 @@ class S3AWSAdapter implements AdapterInterface
      * @param string $path    Path to the existing file.
      * @param string $newpath The new path of the file.
      *
-     * @throws \Cmp\Storage\FileExistsException   Thrown if $newpath exists.
-     * @throws FileNotFoundException Thrown if $path does not exist.
+     * @param bool   $rewrite
      *
-     * @return bool True on success, false on failure.
+     * @return bool Thrown if $newpath exists.
+     * @throws FileExistsException
      */
-    public function rename($path, $newpath)
+    public function rename($path, $newpath, $rewrite = false)
     {
+        if (!$rewrite && $this->exists($newpath)) {
+            throw new FileExistsException($newpath);
+        }
+
         if (!$this->copy($path, $newpath)) {
             return false;
         }
@@ -181,8 +186,6 @@ class S3AWSAdapter implements AdapterInterface
      * Delete a file.
      *
      * @param string $path
-     *
-     * @throws FileNotFoundException
      *
      * @return bool True on success, false on failure.
      */

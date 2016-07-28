@@ -112,8 +112,8 @@ class StorageBuilder implements LoggerAwareInterface
      * @param                 $callStrategy
      * @param LoggerInterface $logger
      *
-     * @return VirtualStorage
-     * @throws ThereAreNoAdaptersAvailableException
+     * @return VirtualStorageInterface
+     * @throws InvalidStorageAdapterException
      */
     public function build(AbstractStorageCallStrategy $callStrategy = null, LoggerInterface $logger = null)
     {
@@ -130,10 +130,10 @@ class StorageBuilder implements LoggerAwareInterface
         }
 
         $strategy = $this->getStrategy();
-        $strategy->addAdapters($this->adapters);
+        $strategy->setAdapters($this->adapters);
         $strategy->setLogger($this->getLogger());
 
-        return new VirtualStorage($strategy);
+        return $strategy;
     }
 
     /**

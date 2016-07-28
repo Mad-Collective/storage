@@ -73,14 +73,14 @@ class StorageBuilderSpec extends ObjectBehavior
     public function it_loads_the_the_default_if_no_other_has_been_been_added(AbstractStorageCallStrategy $callStrategy)
     {
         $this->build($callStrategy);
-        $callStrategy->addAdapters(Argument::any())->shouldHaveBeenCalled();
+        $callStrategy->setAdapters(Argument::any())->shouldHaveBeenCalled();
     }
 
     public function it_returns_a_default_call_strategy_when_no_other_has_been_added(AdapterInterface $a)
     {
         $this->addAdapter($a);
         $storage = $this->build();
-        $storage->getCallStrategyName()->shouldBe('CallAllStrategy');
+        $storage->getStrategyName()->shouldBe('CallAllStrategy');
     }
 
 
@@ -88,7 +88,7 @@ class StorageBuilderSpec extends ObjectBehavior
     {
         $this->addAdapter($vi);
         $this->build($callStrategy)->shouldHaveType('\Cmp\Storage\VirtualStorageInterface');
-        $callStrategy->addAdapters([$vi])->shouldHaveBeenCalled();
+        $callStrategy->setAdapters([$vi])->shouldHaveBeenCalled();
     }
 
     public function it_allows_specify_different_call_strategies(
@@ -99,9 +99,9 @@ class StorageBuilderSpec extends ObjectBehavior
         $strategyName = "Dummy strategy";
         $callStrategy->setLogger(Argument::type('Psr\Log\LoggerInterface'))->shouldBeCalled();
         $callStrategy->getStrategyName()->willReturn($strategyName);
-        $callStrategy->addAdapters([$a])->shouldBeCalled();
+        $callStrategy->setAdapters([$a])->shouldBeCalled();
         $storage = $this->build($callStrategy);
-        $storage->getCallStrategyName()->shouldBe($strategyName);
+        $storage->getStrategyName()->shouldBe($strategyName);
     }
 
     public function it_builds_a_virtual_storage_with_specific_call_strategy_and_logger_provider(
@@ -110,6 +110,6 @@ class StorageBuilderSpec extends ObjectBehavior
         LoggerInterface $loggerInterface
     ) {
         $this->addAdapter($a);
-        $this->build($callStrategy, $loggerInterface)->shouldHaveType('\Cmp\Storage\VirtualStorage');
+        $this->build($callStrategy, $loggerInterface)->shouldHaveType('\Cmp\Storage\VirtualStorageInterface');
     }
 }

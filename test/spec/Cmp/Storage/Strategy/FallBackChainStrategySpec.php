@@ -15,7 +15,7 @@ class FallBackChainStrategySpec extends ObjectBehavior
         $adapter1->getName()->willReturn("ADAPTER DUMMY");
         $adapter2->getName()->willReturn("ADAPTER DUMMY");
         $adapter3->getName()->willReturn("ADAPTER DUMMY");
-        $this->addAdapters([$adapter1, $adapter2, $adapter3]);
+        $this->setAdapters([$adapter1, $adapter2, $adapter3]);
         $this->shouldHaveType('Cmp\Storage\Strategy\FallBackChainStrategy');
     }
 
@@ -56,7 +56,8 @@ class FallBackChainStrategySpec extends ObjectBehavior
     ) {
         $path = "a/b/c";
         $adapter1->getName()->willReturn("ADAPTER DUMMY");
-        $adapter1->get($path)->willThrow(new FileNotFoundException());
+        $adapter1->get($path)->willThrow(new FileNotFoundException($path));
+
         $adapter2->get($path)->willReturn("hi!");
 
         $this->get($path)->shouldBe("hi!");
@@ -100,16 +101,17 @@ class FallBackChainStrategySpec extends ObjectBehavior
         $path = "a/b/c";
         $this->setLogger($logger);
 
-        $adapter1->delete($path)->willThrow(new FileNotFoundException());
+
+        $adapter1->get($path)->willThrow(new FileNotFoundException($path));
         $adapter1->getName()->willReturn("ADAPTER DUMMY");
 
-        $adapter2->delete($path)->willReturn(false);
+        $adapter2->get($path)->willReturn("test content");
         $logger->log(
             LOG_ERR,
             'The adapter "ADAPTER DUMMY" is failing.',
             ['exception' => Argument::any()]
         );
-        $this->delete($path)->shouldBe(false);
+        $this->get($path)->shouldBe("test content");
     }
 
 
@@ -119,13 +121,13 @@ class FallBackChainStrategySpec extends ObjectBehavior
         AdapterInterface $adapter3
     ) {
         $path = "a/b/c";
-        $adapter1->get($path)->willThrow(new FileNotFoundException());
+        $adapter1->get($path)->willThrow(new FileNotFoundException($path));
         $adapter1->getName()->willReturn("ADAPTER DUMMY 1");
 
-        $adapter2->get($path)->willThrow(new FileNotFoundException());
+        $adapter2->get($path)->willThrow(new FileNotFoundException($path));
         $adapter2->getName()->willReturn("ADAPTER DUMMY 2");
 
-        $adapter3->get($path)->willThrow(new FileNotFoundException());
+        $adapter3->get($path)->willThrow(new FileNotFoundException($path));
         $adapter3->getName()->willReturn("ADAPTER DUMMY 3");
 
         $this->shouldThrow('Cmp\Storage\Exception\FileNotFoundException')->during('get', [$path]);

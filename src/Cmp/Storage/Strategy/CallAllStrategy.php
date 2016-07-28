@@ -31,7 +31,7 @@ class CallAllStrategy extends AbstractStorageCallStrategy
             return $adapter->exists($path);
         };
 
-        return $this->runAllAndLog($fn);
+        return $this->runAllAndLog($fn,$path);
     }
 
 
@@ -50,7 +50,7 @@ class CallAllStrategy extends AbstractStorageCallStrategy
             return $adapter->get($path);
         };
 
-        return $this->runOneAndLog($fn);
+        return $this->runOneAndLog($fn,$path);
     }
 
     /**
@@ -169,27 +169,32 @@ class CallAllStrategy extends AbstractStorageCallStrategy
 
     /**
      * Gets one file from all the adapters
-     * 
+     *
      * @param callable $fn
      *
-     * @throws FileNotFoundException
+     * @param          $path
      *
-     * @return string
+     * @return mixed
+     * @throws FileNotFoundException
      */
-    private function runOneAndLog(callable $fn)
+    private function runOneAndLog(callable $fn, $path)
     {
+        $firstException = false;
         foreach ($this->getAdapters() as $adapter) {
             try {
                 $file = $fn($adapter);
                 if ($file !== false) {
                     return $file;
                 }
-            } catch (\Exception $e) {
-                $this->logAdapterException($adapter, $e);
+            } catch (\Exception $exception) {
+                if (!$firstException) {
+                    $firstException = $exception;
+                }
+                $this->logAdapterException($adapter, $exception);
             }
         }
 
-        throw new FileNotFoundException();
+        throw new FileNotFoundException($path);
     }
 
 

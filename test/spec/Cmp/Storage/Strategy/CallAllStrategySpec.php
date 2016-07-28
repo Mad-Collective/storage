@@ -12,7 +12,7 @@ class CallAllStrategySpec extends ObjectBehavior
 {
     function let(AdapterInterface $adapter1, AdapterInterface $adapter2, AdapterInterface $adapter3)
     {
-        $this->addAdapters([$adapter1, $adapter2, $adapter3]);
+        $this->setAdapters([$adapter1, $adapter2, $adapter3]);
         $this->shouldHaveType('Cmp\Storage\Strategy\CallAllStrategy');
     }
 
@@ -53,7 +53,7 @@ class CallAllStrategySpec extends ObjectBehavior
 
         $adapter2->getName()->willReturn("ADAPTER DUMMY");
         $adapter1->delete($path)->willReturn(true);
-        $adapter2->delete($path)->willThrow(new FileNotFoundException());
+        $adapter2->delete($path)->willThrow(new FileNotFoundException($path));
         $adapter3->delete($path)->willReturn(true);
 
 
@@ -143,13 +143,15 @@ class CallAllStrategySpec extends ObjectBehavior
 
     public function it_throws_an_exception_if_a_file_cannot_be_found_on_any_adapter(
         AdapterInterface $adapter1,
-        AdapterInterface $adapter2
+        AdapterInterface $adapter2,
+        AdapterInterface $adapter3
     ) {
         $path = "/b/c";
         $adapter1->get($path)->willReturn(false);
         $adapter2->get($path)->willReturn(false);
+        $adapter3->get($path)->willReturn(false);
 
-        $this->shouldThrow(new FileNotFoundException())->duringGet($path);
+        $this->shouldThrow(new FileNotFoundException($path))->duringGet($path);
     }
 
     public function it_wraps_the_put_and_putStream_calls(

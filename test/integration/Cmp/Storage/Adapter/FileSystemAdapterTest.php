@@ -61,6 +61,28 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
         $this->assertFileExists($filenameNew);
     }
 
+    public function testFileRenameWithOverWrite()
+    {
+        $filenameOld = $this->getTempFileName();
+        $filenameNew = $this->getTempFileName();
+        $this->assertTrue($this->fileSystemStorage->put($filenameOld, "testFileRenameWithOverWrite"));
+        $this->assertTrue($this->fileSystemStorage->put($filenameNew, "testFileRenameWithOverWrite"));
+
+        try {
+            $this->fileSystemStorage->rename($filenameOld, $filenameNew);
+            $this->assertTrue(false);
+        } catch (\Cmp\Storage\Exception\FileExistsException $e) {
+            $this->assertTrue(true);
+        }
+
+        $this->assertTrue($this->fileSystemStorage->rename($filenameOld, $filenameNew, true));
+
+
+        $this->assertFileNotExists($filenameOld);
+        $this->assertFileExists($filenameNew);
+    }
+
+
     public function testFileDelete()
     {
         $filename = $this->getTempFileName();
@@ -105,6 +127,16 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
     }
 
 
+    /**
+     * @expectedException \Cmp\Storage\Exception\InvalidPathException
+     */
+    public function testFSPathLimit()
+    {
+        $fileName = $this->generateRandomString(270);
+        $this->assertTrue($this->fileSystemStorage->put("/tmp/$fileName", "fail"));
+    }
+
+
     public function testParentPathCreation()
     {
         $filename = uniqid('TestAdapter', true).'.test';
@@ -120,6 +152,16 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($this->fileSystemStorage->exists($path));
     }
 
+
+    private function generateRandomString($length = 10) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
+    }
 
     private function getTempFileName()
     {

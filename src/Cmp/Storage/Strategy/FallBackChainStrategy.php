@@ -144,19 +144,21 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
     /**
      * Executes the operation in all adapters, returning on the first success or false if at least one executed the
      * operation without raising exceptions
-     * 
+     *
      * @param callable $fn
      *
-     * @throws \Exception If all adapters raised exceptions, the first one will be thrown
+     * @return mixed If all adapters raised exceptions, the first one will be thrown
      *
-     * @return mixed
+     * @throws bool
      */
     private function runChainAndLog(callable $fn)
     {
         $firstException = false;
+        $call = false;
         foreach ($this->getAdapters() as $adapter) {
             try {
                 $result = $fn($adapter);
+                $call = true;
                 if ($result !== false) {
                     return $result;
                 }
@@ -169,7 +171,7 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
         }
 
         // Result will be set if at least one adapters executed the operation without exceptions
-        if (isset($result)) {
+        if ($call) {
             return $result;
         }
 

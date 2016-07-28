@@ -1,6 +1,7 @@
 <?php
 namespace Cmp\Storage\Adapter;
 
+use Cmp\Storage\Exception\FileExistsException;
 use Cmp\Storage\Exception\FileNotFoundException;
 use Cmp\Storage\Exception\InvalidPathException;
 
@@ -16,6 +17,7 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
      * Adapter Name
      */
     const NAME = "FileSystem";
+    const MAX_PATH_SIZE = 255; //The major part of fs has this limit
 
     /**
      * Get Adapter name
@@ -81,14 +83,17 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
      * @param string $path    Path to the existing file.
      * @param string $newpath The new path of the file.
      *
-     * @throws \Cmp\Storage\FileExistsException   Thrown if $newpath exists.
-     * @throws \Cmp\Storage\FileNotFoundException Thrown if $path does not exist.
+     * @param bool   $rewrite
      *
-     * @return bool True on success, false on failure.
+     * @return bool Thrown if $newpath exists.
+     * @throws FileExistsException
      */
-    public function rename($path, $newpath)
+    public function rename($path, $newpath, $rewrite = false)
     {
         $path = $this->normalizePath($path);
+        if (!$rewrite && $this->exists($newpath)) {
+            throw new FileExistsException($newpath);
+        }
         $this->assertNotFileExists($path);
 
         return rename($path, $newpath);
@@ -99,14 +104,11 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
      *
      * @param string $path
      *
-     * @throws \Cmp\Storage\FileNotFoundException
-     *
      * @return bool True on success, false on failure.
      */
     public function delete($path)
     {
         $path = $this->normalizePath($path);
-        $this->assertNotFileExists($path);
 
         return unlink($path);
     }
@@ -122,10 +124,13 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
      */
     public function put($path, $contents)
     {
+        $this->assertFileMaxLength($path);
         if (is_dir($path)) {
-            throw new InvalidPathException();
+            throw new InvalidPathException($path);
         }
-        $this->createParentFolder($path);
+        if (!$this->createParentFolder($path)){
+            throw new InvalidPathException($path);
+        }
         if (($size = file_put_contents($path, $contents)) === false) {
             return false;
         }
@@ -145,11 +150,13 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
      */
     public function putStream($path, $resource)
     {
-
+        $this->assertFileMaxLength($path);
         if (is_dir($path)) {
-            throw new InvalidPathException();
+            throw new InvalidPathException($path);
         }
-        $this->createParentFolder($path);
+        if (!$this->createParentFolder($path)){
+            throw new InvalidPathException($path);
+        }
         $stream = fopen($path, 'w+');
 
         if (!$stream) {
@@ -158,11 +165,7 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
 
         stream_copy_to_stream($resource, $stream);
 
-        if (!fclose($stream)) {
-            return false;
-        }
-
-        return true;
+        return fclose($stream);
     }
 
     /**
@@ -173,23 +176,40 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     private function assertNotFileExists($path)
     {
         if (!$this->exists($path) || !is_file($path)) {
-            throw new FileNotFoundException();
+            throw new FileNotFoundException($path);
         }
     }
 
     private function normalizePath($path)
     {
+        $this->assertFileMaxLength($path);
+
         return realpath($path);
     }
 
     /**
      * @param $path
+     *
+     * @return bool
      */
     private function createParentFolder($path)
     {
         $dir = dirname($path);
         if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
+            return mkdir($dir, 0777, true);
+        }
+        return true;
+    }
+
+    /**
+     * @param $path
+     *
+     * @throws InvalidPathException
+     */
+    private function assertFileMaxLength($path)
+    {
+        if (strlen(basename($path)) > self::MAX_PATH_SIZE) {
+            throw new InvalidPathException($path);
         }
     }
 }
