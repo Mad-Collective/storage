@@ -179,8 +179,8 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
     }
 
     /**
-     * @param $adapter
-     * @param $e
+     * @param \Cmp\Storage\VirtualStorageInterface $adapter
+     * @param \Exception $e
      */
     private function logAdapterException($adapter, $e)
     {

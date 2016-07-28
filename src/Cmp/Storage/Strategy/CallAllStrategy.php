@@ -172,7 +172,7 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      *
      * @param callable $fn
      *
-     * @param          $path
+     * @param          string $path
      *
      * @return mixed
      * @throws FileNotFoundException
@@ -199,8 +199,8 @@ class CallAllStrategy extends AbstractStorageCallStrategy
 
 
     /**
-     * @param $adapter
-     * @param $e
+     * @param \Cmp\Storage\VirtualStorageInterface $adapter
+     * @param \Exception $e
      */
     private function logAdapterException($adapter, $e)
     {
