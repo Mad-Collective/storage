@@ -7,6 +7,7 @@ use Cmp\Storage\Exception\FileNotFoundException;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 
 class CallAllStrategySpec extends ObjectBehavior
 {
@@ -60,7 +61,7 @@ class CallAllStrategySpec extends ObjectBehavior
         $this->delete($path)->shouldBe(true);
 
         $logger->log(
-            LOG_ERR,
+            LogLevel::ERROR,
             'Adapter "ADAPTER DUMMY" fails.',
             Argument::any()
         )->shouldHaveBeenCalled();

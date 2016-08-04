@@ -31,9 +31,6 @@ class FallBackChainStrategySpec extends ObjectBehavior
         $this->exists($path)->shouldBe(true);
 
         $adapter3->exists($path)->shouldNotHaveBeenCalled();
-        $adapter1->getName()->shouldNotHaveBeenCalled();
-        $adapter2->getName()->shouldNotHaveBeenCalled();
-        $adapter3->getName()->shouldNotHaveBeenCalled();
     }
 
     function it_fails_with_a_false_if_no_adapter_cannot_has_the_file_available(

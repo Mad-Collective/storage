@@ -113,7 +113,6 @@ class S3AWSAdapter implements AdapterInterface
      *
      * @param string $path The path to the file.
      *
-     * @throws FileNotFoundException
      *
      * @return resource The path resource or false on failure.
      */
@@ -133,7 +132,7 @@ class S3AWSAdapter implements AdapterInterface
     /**
      * @param $path
      *
-     * @return Result
+     * @return bool|Result
      * @throws AdapterException
      */
     protected function readObject($path)
