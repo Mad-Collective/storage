@@ -131,11 +131,10 @@ class S3AWSAdapter implements AdapterInterface
     }
 
     /**
-     * Read an object and normalize the response.
+     * @param $path
      *
-     * @param string $path
-     *
-     * @return array|bool
+     * @return Result
+     * @throws AdapterException
      */
     protected function readObject($path)
     {
@@ -154,7 +153,7 @@ class S3AWSAdapter implements AdapterInterface
             /** @var Result $response */
             $response = $this->client->execute($command);
         } catch (S3Exception $e) {
-            return false;
+            throw new AdapterException(self::class, $e);
         }
 
         return $response;
@@ -279,9 +278,10 @@ class S3AWSAdapter implements AdapterInterface
     }
 
     /**
-     * @param string $location
+     * @param $location
      *
      * @return bool
+     * @throws AdapterException
      */
     private function doesDirectoryExist($location)
     {
@@ -299,10 +299,8 @@ class S3AWSAdapter implements AdapterInterface
 
             return $result['Contents'] || $result['CommonPrefixes'];
         } catch (S3Exception $e) {
-            if ($e->getStatusCode() === 403) {
-                return false;
-            }
-            throw new AdapterException(self::class, $e);
+
+            return false;
         }
     }
 

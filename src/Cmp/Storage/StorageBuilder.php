@@ -131,15 +131,7 @@ class StorageBuilder implements LoggerAwareInterface
             $this->setLogger($logger);
         }
 
-        $strategy = $this->getStrategy();
-        $strategy->setAdapters($this->adapters);
-
-        if ($this->getLogger()) {
-            $strategy->setLogger($this->getLogger());
-        }
-
-
-        return $strategy;
+        return $this->createStrategy();
     }
 
     /**
@@ -245,5 +237,22 @@ class StorageBuilder implements LoggerAwareInterface
         }
         $this->getLogger()->log($level, $msg, $context);
 
+    }
+
+    /**
+     * @return mixed
+     */
+    private function createStrategy()
+    {
+        $strategy = $this->getStrategy();
+        $strategy->setAdapters($this->adapters);
+
+        if ($this->getLogger()) {
+            $strategy->setLogger($this->getLogger());
+
+            return $strategy;
+        }
+
+        return $strategy;
     }
 }
