@@ -9,7 +9,7 @@ use Exception;
  *
  * @package Cmp\Storage\Exception
  */
-class FileNotFoundException extends Exception
+class FileNotFoundException extends StorageException
 {
 
     const CODE = 1002;
@@ -22,7 +22,7 @@ class FileNotFoundException extends Exception
      */
     public function __construct($fileName, Exception $previous = null)
     {
-        parent::__construct("The file '$fileName' doesn't exist", $previous);
+        parent::__construct("The file '$fileName' doesn't exist",self::CODE, $previous);
     }
 
 }

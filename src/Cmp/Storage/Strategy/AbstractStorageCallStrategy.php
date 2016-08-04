@@ -5,7 +5,6 @@ use Cmp\Storage\AdapterInterface;
 use Cmp\Storage\VirtualStorageInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
-use SplDoublyLinkedList;
 
 /**
  * Class AbstractStorageCallStrategy

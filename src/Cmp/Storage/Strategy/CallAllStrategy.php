@@ -3,6 +3,7 @@
 namespace Cmp\Storage\Strategy;
 
 use Cmp\Storage\Exception\FileNotFoundException;
+use Cmp\Storage\Exception\StorageException;
 
 /**
  * Class CallAllStrategy
@@ -31,7 +32,7 @@ class CallAllStrategy extends AbstractStorageCallStrategy
             return $adapter->exists($path);
         };
 
-        return $this->runAllAndLog($fn,$path);
+        return $this->runAllAndLog($fn, $path);
     }
 
 
@@ -50,7 +51,7 @@ class CallAllStrategy extends AbstractStorageCallStrategy
             return $adapter->get($path);
         };
 
-        return $this->runOneAndLog($fn,$path);
+        return $this->runOneAndLog($fn, $path);
     }
 
     /**
@@ -175,11 +176,11 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      * @param          $path
      *
      * @return mixed
-     * @throws FileNotFoundException
+     * @throws StorageException
      */
     private function runOneAndLog(callable $fn, $path)
     {
-        $firstException = false;
+        $defaultException = new FileNotFoundException($path);
         foreach ($this->getAdapters() as $adapter) {
             try {
                 $file = $fn($adapter);
@@ -187,14 +188,13 @@ class CallAllStrategy extends AbstractStorageCallStrategy
                     return $file;
                 }
             } catch (\Exception $exception) {
-                if (!$firstException) {
-                    $firstException = $exception;
-                }
+
+                $defaultException = new StorageException($path,$exception);
                 $this->logAdapterException($adapter, $exception);
             }
         }
 
-        throw new FileNotFoundException($path);
+        throw $defaultException;
     }
 
 

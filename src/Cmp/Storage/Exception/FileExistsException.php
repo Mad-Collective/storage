@@ -8,7 +8,7 @@ use Exception;
  *
  * @package Cmp\Storage\Exception
  */
-class FileExistsException extends Exception
+class FileExistsException extends StorageException
 {
 
     const CODE = 1001;
@@ -21,7 +21,7 @@ class FileExistsException extends Exception
      */
     public function __construct($fileName, Exception $previous = null)
     {
-        parent::__construct("The file '$fileName' already exists", $previous);
+        parent::__construct("The file '$fileName' already exists", self::CODE, $previous);
     }
 
 }

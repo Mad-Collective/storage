@@ -9,7 +9,7 @@ use Exception;
  *
  * @package Cmp\Storage\Exception
  */
-class InvalidPathException extends Exception
+class InvalidPathException extends StorageException
 {
 
     const CODE = 1003;
@@ -22,7 +22,7 @@ class InvalidPathException extends Exception
      */
     public function __construct($path, Exception $previous = null)
     {
-        parent::__construct("Invalid '$path'", $previous);
+        parent::__construct("Invalid '$path'",self::CODE, $previous);
     }
 
 }

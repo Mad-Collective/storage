@@ -9,7 +9,7 @@ use Exception;
  *
  * @package Cmp\Storage\Exception
  */
-class StorageAdapterNotFoundException extends Exception
+class StorageAdapterNotFoundException extends StorageException
 {
     const CODE = 1006;
 
@@ -21,6 +21,6 @@ class StorageAdapterNotFoundException extends Exception
      */
     public function __construct($key, Exception $previous = null)
     {
-        parent::__construct("Storage adapter not found", $previous);
+        parent::__construct("Storage adapter not found", self::CODE, $previous);
     }
 }

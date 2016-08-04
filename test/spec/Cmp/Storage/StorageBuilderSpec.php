@@ -29,12 +29,6 @@ class StorageBuilderSpec extends ObjectBehavior
         $this->getLogger()->shouldBe($l);
     }
 
-
-    public function it_has_a_default_logger()
-    {
-        $this->getLogger()->shouldHaveType('Cmp\Storage\Log\DefaultLogger');
-    }
-
     public function it_allows_add_builtin_adapters()
     {
         $this->addAdapter('FileSystem')->shouldBe($this);
@@ -93,8 +87,10 @@ class StorageBuilderSpec extends ObjectBehavior
 
     public function it_allows_specify_different_call_strategies(
         AdapterInterface $a,
-        AbstractStorageCallStrategy $callStrategy
+        AbstractStorageCallStrategy $callStrategy,
+        LoggerInterface $loggerInterface
     ) {
+        $this->setLogger($loggerInterface);
         $this->addAdapter($a);
         $strategyName = "Dummy strategy";
         $callStrategy->setLogger(Argument::type('Psr\Log\LoggerInterface'))->shouldBeCalled();

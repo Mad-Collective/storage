@@ -9,7 +9,7 @@ use Exception;
  *
  * @package Cmp\Storage\Exception
  */
-class ThereAreNoAdaptersAvailableException extends Exception
+class ThereAreNoAdaptersAvailableException extends StorageException
 {
     const CODE = 1007;
 
@@ -21,6 +21,6 @@ class ThereAreNoAdaptersAvailableException extends Exception
      */
     public function __construct($key, Exception $previous = null)
     {
-        parent::__construct("There are no adapters available to use", $previous);
+        parent::__construct("There are no adapters available to use", self::CODE,$previous);
     }
 }

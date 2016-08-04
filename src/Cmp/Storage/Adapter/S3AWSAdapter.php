@@ -5,8 +5,10 @@ namespace Cmp\Storage\Adapter;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use Cmp\Storage\AdapterInterface;
+use Cmp\Storage\Exception\AdapterException;
 use Cmp\Storage\Exception\FileExistsException;
 use Cmp\Storage\Exception\InvalidStorageAdapterException;
+use Cmp\Storage\Exception\StorageException;
 
 /**
  * Class S3AWSAdapter
@@ -15,6 +17,7 @@ use Cmp\Storage\Exception\InvalidStorageAdapterException;
  */
 class S3AWSAdapter implements AdapterInterface
 {
+    const ACL_PUBLIC_READ = 'public-read';
     /**
      * Adapter Name
      */
@@ -222,10 +225,9 @@ class S3AWSAdapter implements AdapterInterface
      */
     public function put($path, $contents)
     {
-        $acl = 'public-read';
         $options = [];
         try {
-            $this->client->upload($this->bucket, $path, $contents, $acl, ['params' => $options]);
+            $this->client->upload($this->bucket, $path, $contents, self::ACL_PUBLIC_READ, ['params' => $options]);
         } catch (S3Exception $e) {
             return false;
         }
@@ -263,7 +265,7 @@ class S3AWSAdapter implements AdapterInterface
                 'Bucket' => $this->bucket,
                 'Key' => $newpath,
                 'CopySource' => urlencode($this->bucket.'/'.$path),
-                'ACL' => 'public-read',
+                'ACL' => self::ACL_PUBLIC_READ,
             ]
         );
 
@@ -297,8 +299,10 @@ class S3AWSAdapter implements AdapterInterface
 
             return $result['Contents'] || $result['CommonPrefixes'];
         } catch (S3Exception $e) {
-            return false;
-
+            if ($e->getStatusCode() === 403) {
+                return false;
+            }
+            throw new AdapterException(self::class, $e);
         }
     }
 

@@ -155,6 +155,7 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
     {
         $firstException = false;
         $call = false;
+        $result = false;
         foreach ($this->getAdapters() as $adapter) {
             try {
                 $result = $fn($adapter);
