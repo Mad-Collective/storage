@@ -2,8 +2,10 @@
 
 namespace Cmp\Storage\Strategy;
 
+use Cmp\Storage\Exception\AdapterException;
 use Cmp\Storage\Exception\FileNotFoundException;
 use Cmp\Storage\Exception\StorageException;
+use Psr\Log\LogLevel;
 
 /**
  * Class CallAllStrategy
@@ -32,7 +34,7 @@ class CallAllStrategy extends AbstractStorageCallStrategy
             return $adapter->exists($path);
         };
 
-        return $this->runAllAndLog($fn, $path);
+        return $this->runAllAndLog($fn);
     }
 
 
@@ -69,7 +71,7 @@ class CallAllStrategy extends AbstractStorageCallStrategy
             return $adapter->getStream($path);
         };
 
-        return $this->runOneAndLog($fn);
+        return $this->runOneAndLog($fn, $path);
     }
 
     /**
@@ -171,7 +173,7 @@ class CallAllStrategy extends AbstractStorageCallStrategy
     /**
      * Gets one file from all the adapters
      *
-     * @param callable $fn
+     * @param callable        $fn
      *
      * @param          string $path
      *
@@ -189,7 +191,7 @@ class CallAllStrategy extends AbstractStorageCallStrategy
                 }
             } catch (\Exception $exception) {
 
-                $defaultException = new StorageException($path,$exception);
+                $defaultException = new AdapterException($path, $exception);
                 $this->logAdapterException($adapter, $exception);
             }
         }
@@ -199,13 +201,13 @@ class CallAllStrategy extends AbstractStorageCallStrategy
 
 
     /**
-     * @param \Cmp\Storage\VirtualStorageInterface $adapter
-     * @param \Exception $e
+     * @param \Cmp\Storage\AdapterInterface $adapter
+     * @param \Exception                    $e
      */
     private function logAdapterException($adapter, $e)
     {
         $this->log(
-            LOG_ERR,
+            LogLevel::ERROR,
             'Adapter "'.$adapter->getName().'" fails.',
             ['exception' => $e]
         );

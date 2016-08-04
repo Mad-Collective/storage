@@ -5,6 +5,7 @@ use Cmp\Storage\AdapterInterface;
 use Cmp\Storage\VirtualStorageInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 
 /**
  * Class AbstractStorageCallStrategy
@@ -29,6 +30,11 @@ abstract class AbstractStorageCallStrategy implements VirtualStorageInterface, L
 
     public function addAdapter(AdapterInterface $adapter)
     {
+        $this->log(
+            LogLevel::INFO,
+            'Add adapter "{{adapter}}" to strategy "{{strategy}}"',
+            ['adapter' => $adapter->getName(), 'strategy' => $this->getStrategyName()]
+        );
         $this->adapters[] = $adapter;
     }
 

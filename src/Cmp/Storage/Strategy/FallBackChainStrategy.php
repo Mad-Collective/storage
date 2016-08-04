@@ -4,6 +4,7 @@ namespace Cmp\Storage\Strategy;
 
 use Cmp\Storage\AdapterInterface;
 use Cmp\Storage\Exception\FileNotFoundException;
+use Psr\Log\LogLevel;
 
 /**
  * Class FallBackChainStrategy
@@ -186,7 +187,7 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
     private function logAdapterException($adapter, $e)
     {
         $this->log(
-            LOG_ERR,
+            LogLevel::ERROR,
             'Adapter "'.$adapter->getName().'" fails.',
             ['exception' => $e]
         );

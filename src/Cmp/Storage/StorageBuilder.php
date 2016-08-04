@@ -59,6 +59,7 @@ class StorageBuilder implements LoggerAwareInterface
      */
     public function setStrategy(AbstractStorageCallStrategy $strategy)
     {
+        $this->log(LogLevel::INFO, "Set the strategy {{strategy}}", ['strategy' => $strategy->getStrategyName()]);
         $this->strategy = $strategy;
 
         return $this;
@@ -137,7 +138,7 @@ class StorageBuilder implements LoggerAwareInterface
     /**
      * Get the current strategy
      *
-     * @return mixed
+     * @return AbstractStorageCallStrategy
      */
     public function getStrategy()
     {
@@ -178,6 +179,7 @@ class StorageBuilder implements LoggerAwareInterface
             $adapter->setLogger($this->logger);
         }
         $this->adapters[] = $adapter;
+        $this->log(LogLevel::INFO, "Added new adapter {{adapter}}", ['adapter' => $adapter->getName()]);
     }
 
 
@@ -240,18 +242,16 @@ class StorageBuilder implements LoggerAwareInterface
     }
 
     /**
-     * @return mixed
+     * @return AbstractStorageCallStrategy
      */
     private function createStrategy()
     {
         $strategy = $this->getStrategy();
         $strategy->setAdapters($this->adapters);
-
         if ($this->getLogger()) {
             $strategy->setLogger($this->getLogger());
-
-            return $strategy;
         }
+        $this->log(LogLevel::INFO, "Creating strategy {{strategy}}", ['strategy' => $strategy->getStrategyName()]);
 
         return $strategy;
     }

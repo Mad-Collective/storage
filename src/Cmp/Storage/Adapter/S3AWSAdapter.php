@@ -153,7 +153,7 @@ class S3AWSAdapter implements AdapterInterface
             /** @var Result $response */
             $response = $this->client->execute($command);
         } catch (S3Exception $e) {
-            throw new AdapterException(self::class, $e);
+            return false;
         }
 
         return $response;
