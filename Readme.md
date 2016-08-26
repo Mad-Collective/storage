@@ -60,7 +60,7 @@ Retrieves a read-stream for a file.
 Rename a file.
 
 ### Delete
-Delete a file.
+Delete a file or directory (even if is not empty).
 
 ### Put
 Create a file or update if exists. It will create the missing folders.

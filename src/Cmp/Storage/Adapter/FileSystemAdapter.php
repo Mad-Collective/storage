@@ -100,7 +100,7 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     }
 
     /**
-     * Delete a file.
+     * Delete a file or directory.
      *
      * @param string $path
      *
@@ -109,8 +109,15 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     public function delete($path)
     {
         $path = $this->normalizePath($path);
+        if (!file_exists($path)) {
+            return false;
+        }
 
-        return unlink($path);
+        if (is_dir($path)) {
+            return $this->removeDirectory($path);
+        } else {
+            return unlink($path);
+        }
     }
 
     /**
@@ -134,7 +141,6 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
         if (($size = file_put_contents($path, $contents)) === false) {
             return false;
         }
-
 
         return true;
     }
@@ -210,6 +216,34 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     {
         if (strlen(basename($path)) > self::MAX_PATH_SIZE) {
             throw new InvalidPathException($path);
+        }
+    }
+
+    /**
+     * Removes directory recursively.
+     *
+     * @param string $path
+     *
+     * @return bool
+     */
+    private function removeDirectory($path)
+    {
+        if (is_dir($path)) {
+            $objects = scandir($path);
+            foreach ($objects as $object) {
+                if ($object != "." && $object != "..") {
+                    if (is_dir($path."/".$object)) {
+                        if (!$this->removeDirectory($path."/".$object)) {
+                            return false;
+                        }
+                    } else {
+                        if (!unlink($path."/".$object)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return rmdir($path);
         }
     }
 }

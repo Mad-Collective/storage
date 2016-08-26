@@ -184,7 +184,7 @@ class S3AWSAdapter implements AdapterInterface
     }
 
     /**
-     * Delete a file.
+     * Delete a file or directory.
      *
      * @param string $path
      *
@@ -192,23 +192,18 @@ class S3AWSAdapter implements AdapterInterface
      */
     public function delete($path)
     {
-
-        $command = $this->client->getCommand(
-            'deleteObject',
-            [
-                'Bucket' => $this->bucket,
-                'Key' => $path,
-            ]
-        );
-
         try {
-            $this->client->execute($command);
-        } catch (S3Exception $e) {
+            if($this->doesDirectoryExist($path)) {
+                $this->client->deleteMatchingObjects($this->bucket, $path.'/');
+                return true;
+            } else if($this->client->doesObjectExist($this->bucket, $path)) {
+                $this->client->deleteMatchingObjects($this->bucket, $path);
+                return true;
+            }
+        } catch (\Exception $e) {
             return false;
         }
-
-        return true;
-
+        return false;
     }
 
 

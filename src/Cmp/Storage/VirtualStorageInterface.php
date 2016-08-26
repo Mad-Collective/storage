@@ -53,7 +53,7 @@ interface VirtualStorageInterface
     public function rename($path, $newpath);
 
     /**
-     * Delete a file.
+     * Delete a file or directory.
      *
      * @param string $path
      *
