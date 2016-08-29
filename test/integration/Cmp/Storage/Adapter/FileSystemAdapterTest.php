@@ -93,6 +93,17 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
         $this->assertFileNotExists($filename);
     }
 
+    public function testDirectoryDelete()
+    {
+        $directoryPath = $this->getTempDirectoryPath();
+        $filename = $directoryPath.DIRECTORY_SEPARATOR.'test.txt';
+        $this->assertFileNotExists($filename);
+        $this->assertTrue($this->fileSystemStorage->put($filename, "testFileDelete"));
+        $this->assertFileExists($filename);
+        $this->assertTrue($this->fileSystemStorage->delete($directoryPath));
+        $this->assertFileNotExists($filename);
+    }
+
 
     public function testFilePut()
     {
@@ -168,6 +179,20 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
         $path = "";
         while (true) {
             $filename = uniqid('TestAdapter', true).'.test';
+            $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.$filename;
+            if (!file_exists($path)) {
+                break;
+            }
+        }
+
+        return $path;
+    }
+
+    private function getTempDirectoryPath()
+    {
+        $path = "";
+        while (true) {
+            $filename = uniqid('TestAdapter', true);
             $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.$filename;
             if (!file_exists($path)) {
                 break;

@@ -87,6 +87,19 @@ class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
         $this->assertFalse($this->s3Adapter->exists($filename));
     }
 
+    public function testDirectoryDelete()
+    {
+        $dirPath = $this->getTempDirPath();
+        $filename = $dirPath.DIRECTORY_SEPARATOR.'test.txt';
+        $this->assertFalse($this->s3Adapter->exists($filename));
+        $this->assertTrue($this->s3Adapter->put($filename, "testFileDelete"));
+        $this->assertTrue($this->s3Adapter->exists($filename));
+        $this->assertTrue($this->s3Adapter->exists($dirPath));
+        $this->assertTrue($this->s3Adapter->delete($dirPath));
+        $this->assertFalse($this->s3Adapter->exists($filename));
+        $this->assertFalse($this->s3Adapter->exists($dirPath));
+    }
+
 
     public function testFilePutStream()
     {
@@ -119,6 +132,11 @@ class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
     private function getTempFileName()
     {
         return uniqid('s3', true).'.test';
+    }
+
+    private function getTempDirPath()
+    {
+        return uniqid('s3', true);
     }
 }
 
