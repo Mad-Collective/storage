@@ -5,9 +5,7 @@ namespace Cmp\Storage\Exception;
 use Exception;
 
 /**
- * Class ThereAreNoAdaptersAvailableException
- *
- * @package Cmp\Storage\Exception
+ * Class ThereAreNoAdaptersAvailableException.
  */
 class ThereAreNoAdaptersAvailableException extends StorageException
 {
@@ -21,6 +19,6 @@ class ThereAreNoAdaptersAvailableException extends StorageException
      */
     public function __construct($key, Exception $previous = null)
     {
-        parent::__construct("There are no adapters available to use", self::CODE,$previous);
+        parent::__construct('There are no adapters available to use', self::CODE, $previous);
     }
 }

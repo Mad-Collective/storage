@@ -11,7 +11,7 @@ use Psr\Log\LoggerInterface;
 
 class StorageBuilderSpec extends ObjectBehavior
 {
-    function it_is_initializable()
+    public function it_is_initializable()
     {
         $this->shouldHaveType('Cmp\Storage\StorageBuilder');
     }
@@ -21,7 +21,6 @@ class StorageBuilderSpec extends ObjectBehavior
         $this->setStrategy($a)->shouldBe($this);
         $this->getStrategy()->shouldBe($a);
     }
-
 
     public function it_allows_setting_a_logger(LoggerInterface $l)
     {
@@ -34,12 +33,10 @@ class StorageBuilderSpec extends ObjectBehavior
         $this->addAdapter('FileSystem')->shouldBe($this);
     }
 
-
     public function it_allows_add_already_initialized_adapter(AdapterInterface $vi)
     {
         $this->addAdapter($vi)->shouldBe($this);
     }
-
 
     public function it_throw_and_exception_when_the_adapter_is_not_valid()
     {
@@ -56,7 +53,6 @@ class StorageBuilderSpec extends ObjectBehavior
         $adapterWithLogger = $prophet->prophesize();
         $adapterWithLogger->willImplement('\Psr\Log\LoggerAwareInterface');
         $adapterWithLogger->willImplement('\Cmp\Storage\AdapterInterface');
-
 
         $this->setLogger($loggerInterface);
         $this->addAdapter($adapterWithLogger);
@@ -77,7 +73,6 @@ class StorageBuilderSpec extends ObjectBehavior
         $storage->getStrategyName()->shouldBe('CallAllStrategy');
     }
 
-
     public function it_builds_a_virtual_storage(AdapterInterface $vi, AbstractStorageCallStrategy $callStrategy)
     {
         $this->addAdapter($vi);
@@ -92,7 +87,7 @@ class StorageBuilderSpec extends ObjectBehavior
     ) {
         $this->setLogger($loggerInterface);
         $this->addAdapter($a);
-        $strategyName = "Dummy strategy";
+        $strategyName = 'Dummy strategy';
         $callStrategy->setLogger(Argument::type('Psr\Log\LoggerInterface'))->shouldBeCalled();
         $callStrategy->getStrategyName()->willReturn($strategyName);
         $callStrategy->setAdapters([$a])->shouldBeCalled();

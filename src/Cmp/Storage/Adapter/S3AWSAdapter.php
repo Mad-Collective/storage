@@ -8,20 +8,17 @@ use Cmp\Storage\AdapterInterface;
 use Cmp\Storage\Exception\AdapterException;
 use Cmp\Storage\Exception\FileExistsException;
 use Cmp\Storage\Exception\InvalidStorageAdapterException;
-use Cmp\Storage\Exception\StorageException;
 
 /**
- * Class S3AWSAdapter
- *
- * @package Cmp\Storage\Adapter
+ * Class S3AWSAdapter.
  */
 class S3AWSAdapter implements AdapterInterface
 {
     const ACL_PUBLIC_READ = 'public-read';
     /**
-     * Adapter Name
+     * Adapter Name.
      */
-    const NAME = "S3AWS";
+    const NAME = 'S3AWS';
 
     /**
      * @var S3Client
@@ -39,7 +36,7 @@ class S3AWSAdapter implements AdapterInterface
         'AWS_REGION',
         'AWS_ACCESS_KEY_ID',
         'AWS_SECRET_ACCESS_KEY',
-        'AWS_BUCKET'
+        'AWS_BUCKET',
     ];
 
     /**
@@ -50,7 +47,7 @@ class S3AWSAdapter implements AdapterInterface
      *
      * @throws InvalidStorageAdapterException
      */
-    public function __construct(array $config = [], $bucket = "")
+    public function __construct(array $config = [], $bucket = '')
     {
         if (empty($config) || empty($bucket)) {
             $this->assertMandatoryConfigEnv();
@@ -61,7 +58,7 @@ class S3AWSAdapter implements AdapterInterface
     }
 
     /**
-     * Get Adapter name
+     * Get Adapter name.
      *
      * @return string
      */
@@ -69,7 +66,6 @@ class S3AWSAdapter implements AdapterInterface
     {
         return self::NAME;
     }
-
 
     /**
      * Check whether a file exists.
@@ -80,6 +76,7 @@ class S3AWSAdapter implements AdapterInterface
      */
     public function exists($path)
     {
+        $path = $this->trimPrefix($path);
         if ($this->client->doesObjectExist($this->bucket, $path)) {
             return true;
         }
@@ -87,15 +84,14 @@ class S3AWSAdapter implements AdapterInterface
         return $this->doesDirectoryExist($path);
     }
 
-
     /**
      * Read a file.
      *
-     * @param string $path The path to the file.
+     * @param string $path The path to the file
      *
      * @throws FileNotFoundException
      *
-     * @return string The file contents or false on failure.
+     * @return string The file contents or false on failure
      */
     public function get($path)
     {
@@ -111,14 +107,12 @@ class S3AWSAdapter implements AdapterInterface
     /**
      * Retrieves a read-stream for a path.
      *
-     * @param string $path The path to the file.
+     * @param string $path The path to the file
      *
-     *
-     * @return resource The path resource or false on failure.
+     * @return resource The path resource or false on failure
      */
     public function getStream($path)
     {
-
         $response = $this->readObject($path);
 
         if ($response !== false) {
@@ -126,17 +120,18 @@ class S3AWSAdapter implements AdapterInterface
         }
 
         return $response;
-
     }
 
     /**
      * @param $path
      *
      * @return bool|Result
+     *
      * @throws AdapterException
      */
     protected function readObject($path)
     {
+        $path = $this->trimPrefix($path);
         $command = $this->client->getCommand(
             'getObject',
             [
@@ -161,17 +156,17 @@ class S3AWSAdapter implements AdapterInterface
     /**
      * Rename a file.
      *
-     * @param string $path    Path to the existing file.
-     * @param string $newpath The new path of the file.
+     * @param string $path      Path to the existing file
+     * @param string $newpath   The new path of the file
+     * @param bool   $overwrite
      *
-     * @param bool   $rewrite
+     * @return bool Thrown if $newpath exists
      *
-     * @return bool Thrown if $newpath exists.
      * @throws FileExistsException
      */
-    public function rename($path, $newpath, $rewrite = false)
+    public function rename($path, $newpath, $overwrite = false)
     {
-        if (!$rewrite && $this->exists($newpath)) {
+        if (!$overwrite && $this->exists($newpath)) {
             throw new FileExistsException($newpath);
         }
 
@@ -180,7 +175,6 @@ class S3AWSAdapter implements AdapterInterface
         }
 
         return $this->delete($path);
-
     }
 
     /**
@@ -188,37 +182,42 @@ class S3AWSAdapter implements AdapterInterface
      *
      * @param string $path
      *
-     * @return bool True on success, false on failure.
+     * @return bool True on success, false on failure
      */
     public function delete($path)
     {
+        $path = $this->trimPrefix($path);
         try {
-            if($this->doesDirectoryExist($path)) {
+            if ($this->doesDirectoryExist($path)) {
                 $this->client->deleteMatchingObjects($this->bucket, $path.'/');
+
                 return true;
-            } else if($this->client->doesObjectExist($this->bucket, $path)) {
+            } elseif ($this->client->doesObjectExist($this->bucket, $path)) {
                 $this->client->deleteMatchingObjects($this->bucket, $path);
+
                 return true;
             }
         } catch (\Exception $e) {
             return false;
         }
+
         return false;
     }
-
 
     /**
      * Create a file or update if exists. It will create the missing folders.
      *
-     * @param string          $path     The path to the file.
-     * @param string|resource $contents The file contents.
+     * @param string          $path     The path to the file
+     * @param string|resource $contents The file contents
      *
-     * @return bool True on success, false on failure.
+     * @return bool True on success, false on failure
+     *
      * @throws \Cmp\Storage\InvalidPathException
      */
     public function put($path, $contents)
     {
         $options = [];
+        $path = $this->trimPrefix($path);
         try {
             $this->client->upload($this->bucket, $path, $contents, self::ACL_PUBLIC_READ, ['params' => $options]);
         } catch (S3Exception $e) {
@@ -231,18 +230,17 @@ class S3AWSAdapter implements AdapterInterface
     /**
      * Create a file or update if exists. It will create the missing folders.
      *
-     * @param string   $path     The path to the file.
-     * @param resource $resource The file handle.
+     * @param string   $path     The path to the file
+     * @param resource $resource The file handle
      *
-     * @throws \Cmp\Storage\InvalidArgumentException Thrown if $resource is not a resource.
+     * @throws \Cmp\Storage\InvalidArgumentException Thrown if $resource is not a resource
      *
-     * @return bool True on success, false on failure.
+     * @return bool True on success, false on failure
      */
     public function putStream($path, $resource)
     {
         return $this->put($path, $resource);
     }
-
 
     /**
      * @param string $path
@@ -252,6 +250,8 @@ class S3AWSAdapter implements AdapterInterface
      */
     private function copy($path, $newpath)
     {
+        $path = $this->trimPrefix($path);
+        $newpath = $this->trimPrefix($newpath);
         $command = $this->client->getCommand(
             'copyObject',
             [
@@ -272,18 +272,19 @@ class S3AWSAdapter implements AdapterInterface
     }
 
     /**
-     * @param $location
+     * @param $path
      *
      * @return bool
+     *
      * @throws AdapterException
      */
-    private function doesDirectoryExist($location)
+    private function doesDirectoryExist($path)
     {
         $command = $this->client->getCommand(
             'listObjects',
             [
                 'Bucket' => $this->bucket,
-                'Prefix' => trim($location, '/').'/',
+                'Prefix' => $this->trimPrefix($path).'/',
                 'MaxKeys' => 1,
             ]
         );
@@ -293,7 +294,6 @@ class S3AWSAdapter implements AdapterInterface
 
             return $result['Contents'] || $result['CommonPrefixes'];
         } catch (S3Exception $e) {
-
             return false;
         }
     }
@@ -311,7 +311,6 @@ class S3AWSAdapter implements AdapterInterface
                     '" is missing. Set it to run this adapter as builtin or use the regular constructor.'
                 );
             }
-
         }
     }
 
@@ -326,9 +325,14 @@ class S3AWSAdapter implements AdapterInterface
             'credentials' => [
                 'key' => getenv('AWS_ACCESS_KEY_ID'),
                 'secret' => getenv('AWS_SECRET_ACCESS_KEY'),
-            ]
+            ],
         ];
 
         return $config;
+    }
+
+    private function trimPrefix($prefix)
+    {
+        return ltrim($prefix, '/');
     }
 }

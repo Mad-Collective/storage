@@ -1,16 +1,14 @@
 <?php
+
 namespace Cmp\Storage\Exception;
 
 use Exception;
 
 /**
- * Class FileExistsException
- *
- * @package Cmp\Storage\Exception
+ * Class FileExistsException.
  */
 class FileExistsException extends StorageException
 {
-
     const CODE = 1001;
 
     /**
@@ -23,5 +21,4 @@ class FileExistsException extends StorageException
     {
         parent::__construct("The file '$fileName' already exists", self::CODE, $previous);
     }
-
 }

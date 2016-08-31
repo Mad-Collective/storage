@@ -3,19 +3,18 @@
 namespace Cmp\Storage\Strategy;
 
 use Cmp\Storage\AdapterInterface;
+use Cmp\Storage\Exception\FileExistsException;
 use Cmp\Storage\Exception\FileNotFoundException;
 use Psr\Log\LogLevel;
 
 /**
- * Class FallBackChainStrategy
- *
- * @package Cmp\Storage\Strategy
+ * Class FallBackChainStrategy.
  */
 class FallBackChainStrategy extends AbstractStorageCallStrategy
 {
     public function getStrategyName()
     {
-        return "FallBackChainStrategy";
+        return 'FallBackChainStrategy';
     }
 
     /**
@@ -38,6 +37,7 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      * @param string $path
      *
      * @return mixed
+     *
      * @throws FileNotFoundException
      */
     public function get($path)
@@ -52,11 +52,11 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
     /**
      * Retrieves a read-stream for a path.
      *
-     * @param string $path The path to the file.
+     * @param string $path The path to the file
      *
      * @throws \Cmp\Storage\Exception\FileNotFoundException
      *
-     * @return resource The path resource or false on failure.
+     * @return resource The path resource or false on failure
      */
     public function getStream($path)
     {
@@ -70,18 +70,18 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
     /**
      * Rename a file.
      *
-     * @param string $path    Path to the existing file.
-     * @param string $newpath The new path of the file.
+     * @param string $path      Path to the existing file
+     * @param string $newpath   The new path of the file
+     * @param bool   $overwrite
      *
-     * @throws \Cmp\Storage\Exception\\FileExistsException   Thrown if $newpath exists.
-     * @throws \Cmp\Storage\Exception\FileNotFoundException Thrown if $path does not exist.
+     * @return bool
      *
-     * @return bool True on success, false on failure.
+     * @throws FileExistsException Thrown if $newpath exists
      */
-    public function rename($path, $newpath)
+    public function rename($path, $newpath, $overwrite = false)
     {
-        $fn = function (AdapterInterface $adapter) use ($path, $newpath) {
-            return $adapter->rename($path, $newpath);
+        $fn = function (AdapterInterface $adapter) use ($path, $newpath, $overwrite) {
+            return $adapter->rename($path, $newpath, $overwrite);
         };
 
         return $this->runChainAndLog($fn);
@@ -94,7 +94,7 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      *
      * @throws \Cmp\Storage\Exception\FileNotFoundException
      *
-     * @return bool True on success, false on failure.
+     * @return bool True on success, false on failure
      */
     public function delete($path)
     {
@@ -108,10 +108,11 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
     /**
      * Create a file or update if exists. It will create the missing folders.
      *
-     * @param string $path     The path to the file.
-     * @param string $contents The file contents.
+     * @param string $path     The path to the file
+     * @param string $contents The file contents
      *
-     * @return bool True on success, false on failure.
+     * @return bool True on success, false on failure
+     *
      * @throws \Cmp\Storage\Exception\InvalidPathException
      */
     public function put($path, $contents)
@@ -126,12 +127,12 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
     /**
      * Create a file or update if exists. It will create the missing folders.
      *
-     * @param string   $path     The path to the file.
-     * @param resource $resource The file handle.
+     * @param string   $path     The path to the file
+     * @param resource $resource The file handle
      *
-     * @throws \Cmp\Storage\InvalidArgumentException Thrown if $resource is not a resource.
+     * @throws \Cmp\Storage\InvalidArgumentException Thrown if $resource is not a resource
      *
-     * @return bool True on success, false on failure.
+     * @return bool True on success, false on failure
      */
     public function putStream($path, $resource)
     {
@@ -144,7 +145,7 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
 
     /**
      * Executes the operation in all adapters, returning on the first success or false if at least one executed the
-     * operation without raising exceptions
+     * operation without raising exceptions.
      *
      * @param callable $fn
      *
@@ -182,7 +183,7 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
 
     /**
      * @param \Cmp\Storage\VirtualStorageInterface $adapter
-     * @param \Exception $e
+     * @param \Exception                           $e
      */
     private function logAdapterException($adapter, $e)
     {

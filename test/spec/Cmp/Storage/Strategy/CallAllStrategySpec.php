@@ -11,52 +11,49 @@ use Psr\Log\LogLevel;
 
 class CallAllStrategySpec extends ObjectBehavior
 {
-    function let(AdapterInterface $adapter1, AdapterInterface $adapter2, AdapterInterface $adapter3)
+    public function let(AdapterInterface $adapter1, AdapterInterface $adapter2, AdapterInterface $adapter3)
     {
         $this->setAdapters([$adapter1, $adapter2, $adapter3]);
         $this->shouldHaveType('Cmp\Storage\Strategy\CallAllStrategy');
     }
 
-    function it_always_calls_all_their_adapters(
+    public function it_always_calls_all_their_adapters(
         AdapterInterface $adapter1,
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
-        $path = "a/b/c";
+        $path = 'a/b/c';
         $adapter1->exists($path)->willReturn(true);
         $adapter2->exists($path)->willReturn(true);
         $adapter3->exists($path)->willReturn(true);
         $this->exists($path)->shouldBe(true);
     }
 
-
-    function it_returns_the_most_optimistic_result(
+    public function it_returns_the_most_optimistic_result(
         AdapterInterface $adapter1,
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
-        $path = "a/b/c";
+        $path = 'a/b/c';
         $adapter1->exists($path)->willReturn(false);
         $adapter2->exists($path)->willReturn(false);
         $adapter3->exists($path)->willReturn(true);
         $this->exists($path)->shouldBe(true);
     }
 
-    function it_logs_any_problem_with_the_adapters(
+    public function it_logs_any_problem_with_the_adapters(
         LoggerInterface $logger,
         AdapterInterface $adapter1,
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
-
-        $path = "a/b/c";
+        $path = 'a/b/c';
         $this->setLogger($logger);
 
-        $adapter2->getName()->willReturn("ADAPTER DUMMY");
+        $adapter2->getName()->willReturn('ADAPTER DUMMY');
         $adapter1->delete($path)->willReturn(true);
         $adapter2->delete($path)->willThrow(new FileNotFoundException($path));
         $adapter3->delete($path)->willReturn(true);
-
 
         $this->delete($path)->shouldBe(true);
 
@@ -67,12 +64,12 @@ class CallAllStrategySpec extends ObjectBehavior
         )->shouldHaveBeenCalled();
     }
 
-    function it_fails_if_all_the_adapters_fail(
+    public function it_fails_if_all_the_adapters_fail(
         AdapterInterface $adapter1,
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
-        $path = "a/b/c";
+        $path = 'a/b/c';
         $adapter1->exists($path)->willReturn(false);
         $adapter2->exists($path)->willReturn(false);
         $adapter3->exists($path)->willReturn(false);
@@ -84,15 +81,17 @@ class CallAllStrategySpec extends ObjectBehavior
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
-
-        $path = "/b/c";
-        $newpath = "/b/d";
-        $adapter1->rename($path, $newpath)->willReturn(true);
-        $adapter2->rename($path, $newpath)->willReturn(true);
-        $adapter3->rename($path, $newpath)->willReturn(true);
+        $path = '/b/c';
+        $newpath = '/b/d';
+        $adapter1->rename($path, $newpath, false)->willReturn(true);
+        $adapter2->rename($path, $newpath, false)->willReturn(true);
+        $adapter3->rename($path, $newpath, false)->willReturn(true);
         $this->rename($path, $newpath)->shouldBe(true);
 
-
+        $adapter1->rename($path, $newpath, true)->willReturn(true);
+        $adapter2->rename($path, $newpath, true)->willReturn(true);
+        $adapter3->rename($path, $newpath, true)->willReturn(true);
+        $this->rename($path, $newpath, true)->shouldBe(true);
     }
 
     public function it_wraps_the_delete_call(
@@ -100,14 +99,11 @@ class CallAllStrategySpec extends ObjectBehavior
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
-
-        $path = "/b/c";
+        $path = '/b/c';
         $adapter1->delete($path)->willReturn(true);
         $adapter2->delete($path)->willReturn(true);
         $adapter3->delete($path)->willReturn(true);
         $this->delete($path)->shouldBe(true);
-
-
     }
 
     public function it_wraps_the_exists_call(
@@ -115,12 +111,11 @@ class CallAllStrategySpec extends ObjectBehavior
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
-        $path = "/b/c";
+        $path = '/b/c';
         $adapter1->exists($path)->willReturn(true);
         $adapter2->exists($path)->willReturn(true);
         $adapter3->exists($path)->willReturn(true);
         $this->exists($path)->shouldBe(true);
-
     }
 
     public function it_wraps_the_get_and_getStream_calls(
@@ -128,9 +123,8 @@ class CallAllStrategySpec extends ObjectBehavior
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
-
-        $path = "/b/c";
-        $contents = "hi!";
+        $path = '/b/c';
+        $contents = 'hi!';
         $adapter1->get($path)->willReturn($contents);
         $this->get($path)->shouldBe($contents);
         $adapter2->get($path)->shouldNotHaveBeenCalled();
@@ -147,7 +141,7 @@ class CallAllStrategySpec extends ObjectBehavior
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
-        $path = "/b/c";
+        $path = '/b/c';
         $adapter1->get($path)->willReturn(false);
         $adapter2->get($path)->willReturn(false);
         $adapter3->get($path)->willReturn(false);
@@ -160,10 +154,9 @@ class CallAllStrategySpec extends ObjectBehavior
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
-
-        $path = "/b/c";
-        $contents = "hi!";
-        $stream = "stream";
+        $path = '/b/c';
+        $contents = 'hi!';
+        $stream = 'stream';
         $adapter1->put($path, $contents)->willReturn(true);
         $adapter2->put($path, $contents)->willReturn(true);
         $adapter3->put($path, $contents)->willReturn(true);
@@ -174,5 +167,4 @@ class CallAllStrategySpec extends ObjectBehavior
         $adapter3->putStream($path, $stream)->willReturn(true);
         $this->putStream($path, $stream)->shouldBe(true);
     }
-
 }

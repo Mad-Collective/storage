@@ -7,9 +7,9 @@ use Exception;
 /**
  * Class StorageAdapterNotFoundException.
  */
-class StorageAdapterNotFoundException extends StorageException
+class RelativePathNotAllowed extends StorageException
 {
-    const CODE = 1006;
+    const CODE = 1009;
 
     /**
      * StorageAdapterNotFoundException constructor.
@@ -19,6 +19,6 @@ class StorageAdapterNotFoundException extends StorageException
      */
     public function __construct($key, Exception $previous = null)
     {
-        parent::__construct('Storage adapter not found', self::CODE, $previous);
+        parent::__construct("Relative path not allowed $key", self::CODE, $previous);
     }
 }

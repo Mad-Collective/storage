@@ -1,10 +1,9 @@
 <?php
-use Cmp\Storage\Adapter\FileSystemAdapter;
 
+use Cmp\Storage\Adapter\FileSystemAdapter;
 
 class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
 {
-
     /**
      * @var FileSystemAdapter
      */
@@ -15,13 +14,12 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
         $this->fileSystemStorage = new \Cmp\Storage\Adapter\FileSystemAdapter();
     }
 
-
     public function testFileExists()
     {
         $filename = $this->getTempFileName();
         $this->assertFileNotExists($filename);
         $this->assertFalse($this->fileSystemStorage->exists($filename));
-        $this->assertTrue($this->fileSystemStorage->put($filename, "testFileExists"));
+        $this->assertTrue($this->fileSystemStorage->put($filename, 'testFileExists'));
         $this->assertFileExists($filename);
         $this->assertTrue($this->fileSystemStorage->exists($filename));
     }
@@ -29,7 +27,7 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
     public function testFileGet()
     {
         $filename = $this->getTempFileName();
-        $content = "This is a get test: ".rand(0, 1000);
+        $content = 'This is a get test: '.rand(0, 1000);
         $this->assertTrue($this->fileSystemStorage->put($filename, $content));
         $this->assertFileExists($filename);
         $this->assertEquals($content, $this->fileSystemStorage->get($filename));
@@ -38,7 +36,7 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
     public function testFileGetStream()
     {
         $filename = $this->getTempFileName();
-        $content = "This is a get test: ".rand(0, 1000)."\n";
+        $content = 'This is a get test: '.rand(0, 1000)."\n";
         $this->assertTrue($this->fileSystemStorage->put($filename, $content));
         $this->assertFileExists($filename);
 
@@ -54,7 +52,7 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
         $filenameNew = $this->getTempFileName();
         $this->assertFileNotExists($filenameOld);
         $this->assertFileNotExists($filenameNew);
-        $this->assertTrue($this->fileSystemStorage->put($filenameOld, "testFileRename"));
+        $this->assertTrue($this->fileSystemStorage->put($filenameOld, 'testFileRename'));
         $this->assertFileExists($filenameOld);
         $this->assertTrue($this->fileSystemStorage->rename($filenameOld, $filenameNew));
         $this->assertFileNotExists($filenameOld);
@@ -65,8 +63,8 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
     {
         $filenameOld = $this->getTempFileName();
         $filenameNew = $this->getTempFileName();
-        $this->assertTrue($this->fileSystemStorage->put($filenameOld, "testFileRenameWithOverWrite"));
-        $this->assertTrue($this->fileSystemStorage->put($filenameNew, "testFileRenameWithOverWrite"));
+        $this->assertTrue($this->fileSystemStorage->put($filenameOld, 'testFileRenameWithOverWrite'));
+        $this->assertTrue($this->fileSystemStorage->put($filenameNew, 'testFileRenameWithOverWrite'));
 
         try {
             $this->fileSystemStorage->rename($filenameOld, $filenameNew);
@@ -77,17 +75,15 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
 
         $this->assertTrue($this->fileSystemStorage->rename($filenameOld, $filenameNew, true));
 
-
         $this->assertFileNotExists($filenameOld);
         $this->assertFileExists($filenameNew);
     }
-
 
     public function testFileDelete()
     {
         $filename = $this->getTempFileName();
         $this->assertFileNotExists($filename);
-        $this->assertTrue($this->fileSystemStorage->put($filename, "testFileDelete"));
+        $this->assertTrue($this->fileSystemStorage->put($filename, 'testFileDelete'));
         $this->assertFileExists($filename);
         $this->assertTrue($this->fileSystemStorage->delete($filename));
         $this->assertFileNotExists($filename);
@@ -98,16 +94,15 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
         $directoryPath = $this->getTempDirectoryPath();
         $filename = $directoryPath.DIRECTORY_SEPARATOR.'test.txt';
         $this->assertFileNotExists($filename);
-        $this->assertTrue($this->fileSystemStorage->put($filename, "testFileDelete"));
+        $this->assertTrue($this->fileSystemStorage->put($filename, 'testFileDelete'));
         $this->assertFileExists($filename);
         $this->assertTrue($this->fileSystemStorage->delete($directoryPath));
         $this->assertFileNotExists($filename);
     }
 
-
     public function testFilePut()
     {
-        $content = "This is a put test: ".rand(0, 1000)."\n";
+        $content = 'This is a put test: '.rand(0, 1000)."\n";
         $filename = $this->getTempFileName();
         $this->assertFileNotExists($filename);
         $this->assertTrue($this->fileSystemStorage->put($filename, $content));
@@ -117,7 +112,7 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
 
     public function testFilePutStream()
     {
-        $content = "This is a putstrem test: ".rand(0, 1000)."\n";
+        $content = 'This is a putstrem test: '.rand(0, 1000)."\n";
         $resource = fopen('php://memory', 'r+');
         fwrite($resource, $content);
         rewind($resource);
@@ -134,9 +129,8 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
      */
     public function testBadPath()
     {
-        $this->assertTrue($this->fileSystemStorage->put("/tmp", "fail"));
+        $this->assertTrue($this->fileSystemStorage->put('/tmp', 'fail'));
     }
-
 
     /**
      * @expectedException \Cmp\Storage\Exception\InvalidPathException
@@ -144,9 +138,8 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
     public function testFSPathLimit()
     {
         $fileName = $this->generateRandomString(270);
-        $this->assertTrue($this->fileSystemStorage->put("/tmp/$fileName", "fail"));
+        $this->assertTrue($this->fileSystemStorage->put("/tmp/$fileName", 'fail'));
     }
-
 
     public function testParentPathCreation()
     {
@@ -158,25 +151,26 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
                 DIRECTORY_SEPARATOR.$filename;
 
         $this->assertFileNotExists($path);
-        $this->assertTrue($this->fileSystemStorage->put($path, "testParentPathCreation"));
+        $this->assertTrue($this->fileSystemStorage->put($path, 'testParentPathCreation'));
         $this->assertFileExists($path);
         $this->assertTrue($this->fileSystemStorage->exists($path));
     }
 
-
-    private function generateRandomString($length = 10) {
+    private function generateRandomString($length = 10)
+    {
         $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $charactersLength = strlen($characters);
         $randomString = '';
-        for ($i = 0; $i < $length; $i++) {
+        for ($i = 0; $i < $length; ++$i) {
             $randomString .= $characters[rand(0, $charactersLength - 1)];
         }
+
         return $randomString;
     }
 
     private function getTempFileName()
     {
-        $path = "";
+        $path = '';
         while (true) {
             $filename = uniqid('TestAdapter', true).'.test';
             $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.$filename;
@@ -190,7 +184,7 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
 
     private function getTempDirectoryPath()
     {
-        $path = "";
+        $path = '';
         while (true) {
             $filename = uniqid('TestAdapter', true);
             $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.$filename;
