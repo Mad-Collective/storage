@@ -8,17 +8,13 @@ use Cmp\Storage\Exception\StorageException;
 use Psr\Log\LogLevel;
 
 /**
- * Class CallAllStrategy
- *
- * @package Cmp\Storage\Strategy
+ * Class CallAllStrategy.
  */
 class CallAllStrategy extends AbstractStorageCallStrategy
 {
-
-
     public function getStrategyName()
     {
-        return "CallAllStrategy";
+        return 'CallAllStrategy';
     }
 
     /**
@@ -37,15 +33,14 @@ class CallAllStrategy extends AbstractStorageCallStrategy
         return $this->runAllAndLog($fn);
     }
 
-
     /**
      * Read a file.
      *
-     * @param string $path The path to the file.
+     * @param string $path The path to the file
      *
      * @throws \Cmp\Storage\Exception\FileNotFoundException
      *
-     * @return string The file contents or false on failure.
+     * @return string The file contents or false on failure
      */
     public function get($path)
     {
@@ -59,11 +54,11 @@ class CallAllStrategy extends AbstractStorageCallStrategy
     /**
      * Retrieves a read-stream for a path.
      *
-     * @param string $path The path to the file.
+     * @param string $path The path to the file
      *
      * @throws \Cmp\Storage\Exception\FileNotFoundException
      *
-     * @return resource The path resource or false on failure.
+     * @return resource The path resource or false on failure
      */
     public function getStream($path)
     {
@@ -77,18 +72,16 @@ class CallAllStrategy extends AbstractStorageCallStrategy
     /**
      * Rename a file.
      *
-     * @param string $path    Path to the existing file.
-     * @param string $newpath The new path of the file.
+     * @param string $path      Path to the existing file
+     * @param string $newpath   The new path of the file
+     * @param bool   $overwrite Thrown an Exception if $newpath exists
      *
-     * @throws \Cmp\Storage\Exception\FileExistsException   Thrown if $newpath exists.
-     * @throws \Cmp\Storage\Exception\FileNotFoundException Thrown if $path does not exist.
-     *
-     * @return bool True on success, false on failure.
+     * @return bool
      */
-    public function rename($path, $newpath)
+    public function rename($path, $newpath, $overwrite = false)
     {
-        $fn = function ($adapter) use ($path, $newpath) {
-            return $adapter->rename($path, $newpath);
+        $fn = function ($adapter) use ($path, $newpath, $overwrite) {
+            return $adapter->rename($path, $newpath, $overwrite);
         };
 
         return $this->runAllAndLog($fn);
@@ -101,7 +94,7 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      *
      * @throws \Cmp\Storage\Exception\FileNotFoundException
      *
-     * @return bool True on success, false on failure.
+     * @return bool True on success, false on failure
      */
     public function delete($path)
     {
@@ -115,10 +108,11 @@ class CallAllStrategy extends AbstractStorageCallStrategy
     /**
      * Create a file or update if exists. It will create the missing folders.
      *
-     * @param string $path     The path to the file.
-     * @param string $contents The file contents.
+     * @param string $path     The path to the file
+     * @param string $contents The file contents
      *
-     * @return bool True on success, false on failure.
+     * @return bool True on success, false on failure
+     *
      * @throws \Cmp\Storage\Exception\InvalidPathException
      */
     public function put($path, $contents)
@@ -133,12 +127,12 @@ class CallAllStrategy extends AbstractStorageCallStrategy
     /**
      * Create a file or update if exists. It will create the missing folders.
      *
-     * @param string   $path     The path to the file.
-     * @param resource $resource The file handle.
+     * @param string   $path     The path to the file
+     * @param resource $resource The file handle
      *
-     * @throws \Cmp\Storage\Exception\InvalidArgumentException Thrown if $resource is not a resource.
+     * @throws \Cmp\Storage\Exception\InvalidArgumentException Thrown if $resource is not a resource
      *
-     * @return bool True on success, false on failure.
+     * @return bool True on success, false on failure
      */
     public function putStream($path, $resource)
     {
@@ -148,7 +142,6 @@ class CallAllStrategy extends AbstractStorageCallStrategy
 
         return $this->runAllAndLog($fn);
     }
-
 
     /**
      * @param callable $fn
@@ -171,13 +164,13 @@ class CallAllStrategy extends AbstractStorageCallStrategy
     }
 
     /**
-     * Gets one file from all the adapters
+     * Gets one file from all the adapters.
      *
-     * @param callable        $fn
-     *
-     * @param          string $path
+     * @param callable $fn
+     * @param string   $path
      *
      * @return mixed
+     *
      * @throws StorageException
      */
     private function runOneAndLog(callable $fn, $path)
@@ -190,7 +183,6 @@ class CallAllStrategy extends AbstractStorageCallStrategy
                     return $file;
                 }
             } catch (\Exception $exception) {
-
                 $defaultException = new AdapterException($path, $exception);
                 $this->logAdapterException($adapter, $exception);
             }
@@ -198,7 +190,6 @@ class CallAllStrategy extends AbstractStorageCallStrategy
 
         throw $defaultException;
     }
-
 
     /**
      * @param \Cmp\Storage\AdapterInterface $adapter

@@ -1,6 +1,6 @@
 <?php
 
-class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
+class S3AwsAdapterTest extends PHPUnit_Framework_TestCase
 {
     /**
      * @var \Cmp\Storage\Adapter\S3AWSAdapter
@@ -12,30 +12,27 @@ class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
         $this->s3Adapter = new \Cmp\Storage\Adapter\S3AWSAdapter();
     }
 
-
     public function testFileExists()
     {
         $filename = $this->getTempFileName();
         $this->assertFalse($this->s3Adapter->exists($filename));
-        $this->assertTrue($this->s3Adapter->put($filename, "testFileExists"));
+        $this->assertTrue($this->s3Adapter->put($filename, 'testFileExists'));
         $this->assertTrue($this->s3Adapter->exists($filename));
     }
-
 
     public function testFileGetAndPut()
     {
         $filename = $this->getTempFileName();
-        $content = "This is a get test: ".rand(0, 1000);
+        $content = 'This is a get test: '.rand(0, 1000);
         $this->assertTrue($this->s3Adapter->put($filename, $content));
         $this->assertTrue($this->s3Adapter->exists($filename));
         $this->assertEquals($content, $this->s3Adapter->get($filename));
     }
 
-
     public function testFileGetStream()
     {
         $filename = $this->getTempFileName();
-        $content = "This is a get test: ".rand(0, 1000)."\n";
+        $content = 'This is a get test: '.rand(0, 1000)."\n";
         $this->assertTrue($this->s3Adapter->put($filename, $content));
         $this->assertTrue($this->s3Adapter->exists($filename));
         $stream = $this->s3Adapter->getStream($filename);
@@ -50,20 +47,19 @@ class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
         $filenameNew = $this->getTempFileName();
         $this->assertFalse($this->s3Adapter->exists($filenameOld));
         $this->assertFalse($this->s3Adapter->exists($filenameNew));
-        $this->assertTrue($this->s3Adapter->put($filenameOld, "testFileRename"));
+        $this->assertTrue($this->s3Adapter->put($filenameOld, 'testFileRename'));
         $this->assertTrue($this->s3Adapter->exists($filenameOld));
         $this->assertTrue($this->s3Adapter->rename($filenameOld, $filenameNew));
         $this->assertFalse($this->s3Adapter->exists($filenameOld));
         $this->assertTrue($this->s3Adapter->exists($filenameNew));
     }
 
-
     public function testFileRenameWithOverWrite()
     {
         $filenameOld = $this->getTempFileName();
         $filenameNew = $this->getTempFileName();
-        $this->assertTrue($this->s3Adapter->put($filenameOld, "testFileRenameWithOverWrite"));
-        $this->assertTrue($this->s3Adapter->put($filenameNew, "testFileRenameWithOverWrite"));
+        $this->assertTrue($this->s3Adapter->put($filenameOld, 'testFileRenameWithOverWrite'));
+        $this->assertTrue($this->s3Adapter->put($filenameNew, 'testFileRenameWithOverWrite'));
 
         try {
             $this->s3Adapter->rename($filenameOld, $filenameNew);
@@ -81,7 +77,7 @@ class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
     {
         $filename = $this->getTempFileName();
         $this->assertFalse($this->s3Adapter->exists($filename));
-        $this->assertTrue($this->s3Adapter->put($filename, "testFileDelete"));
+        $this->assertTrue($this->s3Adapter->put($filename, 'testFileDelete'));
         $this->assertTrue($this->s3Adapter->exists($filename));
         $this->assertTrue($this->s3Adapter->delete($filename));
         $this->assertFalse($this->s3Adapter->exists($filename));
@@ -92,7 +88,7 @@ class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
         $dirPath = $this->getTempDirPath();
         $filename = $dirPath.DIRECTORY_SEPARATOR.'test.txt';
         $this->assertFalse($this->s3Adapter->exists($filename));
-        $this->assertTrue($this->s3Adapter->put($filename, "testFileDelete"));
+        $this->assertTrue($this->s3Adapter->put($filename, 'testFileDelete'));
         $this->assertTrue($this->s3Adapter->exists($filename));
         $this->assertTrue($this->s3Adapter->exists($dirPath));
         $this->assertTrue($this->s3Adapter->delete($dirPath));
@@ -100,10 +96,9 @@ class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
         $this->assertFalse($this->s3Adapter->exists($dirPath));
     }
 
-
     public function testFilePutStream()
     {
-        $content = "This is a putstrem test: ".rand(0, 1000)."\n";
+        $content = 'This is a putstrem test: '.rand(0, 1000)."\n";
         $resource = fopen('php://memory', 'r+');
         fwrite($resource, $content);
         rewind($resource);
@@ -115,18 +110,21 @@ class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($content, $this->s3Adapter->get($filename));
     }
 
-
     public function testParentPathCreation()
     {
         $filename = uniqid('TestAdapter', true).'.test';
-        $path = rand(1, 1000).
+        $path = DIRECTORY_SEPARATOR.rand(1, 1000).
                 DIRECTORY_SEPARATOR.rand(1, 1000).
                 DIRECTORY_SEPARATOR.rand(1, 1000).
                 DIRECTORY_SEPARATOR.$filename;
 
         $this->assertFalse($this->s3Adapter->exists($path));
-        $this->assertTrue($this->s3Adapter->put($path, "testParentPathCreation"));
+        $this->assertTrue($this->s3Adapter->put($path, 'testParentPathCreation'));
         $this->assertTrue($this->s3Adapter->exists($path));
+    }
+
+    public function testPathWithPrefix()
+    {
     }
 
     private function getTempFileName()
@@ -139,4 +137,3 @@ class S3AWSAdapterTest extends PHPUnit_Framework_TestCase
         return uniqid('s3', true);
     }
 }
-

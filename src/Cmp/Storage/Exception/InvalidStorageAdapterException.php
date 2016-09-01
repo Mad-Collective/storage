@@ -5,13 +5,10 @@ namespace Cmp\Storage\Exception;
 use Exception;
 
 /**
- * Class InvalidStorageAdapterException
- *
- * @package Cmp\Storage\Exception
+ * Class InvalidStorageAdapterException.
  */
 class InvalidStorageAdapterException extends StorageException
 {
-
     const CODE = 1004;
     /**
      * InvalidStorageAdapterException constructor.
@@ -21,6 +18,6 @@ class InvalidStorageAdapterException extends StorageException
      */
     public function __construct($msg, Exception $previous = null)
     {
-        parent::__construct($msg,self::CODE, $previous);
+        parent::__construct($msg, self::CODE, $previous);
     }
 }

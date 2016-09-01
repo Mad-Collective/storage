@@ -1,4 +1,5 @@
 <?php
+
 namespace Cmp\Storage\Strategy;
 
 use Cmp\Storage\AdapterInterface;
@@ -8,20 +9,15 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
 /**
- * Class AbstractStorageCallStrategy
- *
- * @package Cmp\Storage\Strategy
+ * Class AbstractStorageCallStrategy.
  */
 abstract class AbstractStorageCallStrategy implements VirtualStorageInterface, LoggerAwareInterface
 {
-
-
     /**
      * @var LoggerInterface
      */
     private $logger;
     private $adapters;
-
 
     public function __construct()
     {
@@ -56,14 +52,11 @@ abstract class AbstractStorageCallStrategy implements VirtualStorageInterface, L
 
     /**
      * @param LoggerInterface $logger
-     *
-     * @return null
      */
     public function setLogger(LoggerInterface $logger)
     {
         $this->logger = $logger;
     }
-
 
     /**
      * Logs with an arbitrary level.
@@ -71,8 +64,6 @@ abstract class AbstractStorageCallStrategy implements VirtualStorageInterface, L
      * @param mixed  $level
      * @param string $message
      * @param array  $context
-     *
-     * @return null
      */
     public function log($level, $message, array $context = array())
     {
@@ -83,6 +74,4 @@ abstract class AbstractStorageCallStrategy implements VirtualStorageInterface, L
     }
 
     abstract public function getStrategyName();
-
-
 }
