@@ -45,32 +45,6 @@ composer require "cmp/storage"
 ```
 
 
-##Functions available from storage
-
-### Exists
-Check whether a file exists.
-
-### Get
-Read a file and return the content.
-
-### GetStream
-Retrieves a read-stream for a file.
-
-### Rename
-Rename a file.
-
-### Delete
-Delete a file or directory (even if is not empty).
-
-### Put
-Create a file or update if exists. It will create the missing folders.
-
-### PutStream
-Create a file or update if exists. It will create the missing folders.
-
-__*Note:*__ Use stream functions for big files.
-
-
 ##Adapters
 
 It provides a generic API for handling common tasks across multiple file storage engines. If you want add a new one, you have to implements ``\Cmp\Storage\AdapterInterface``.
@@ -99,6 +73,30 @@ It allows you specify different call strategies when you have been registered mo
 If you want create a custom call strategy you must extend ``\Cmp\Storage\Strategy\AbstractStorageCallStrategies``
 
 __*Note:*__ By default the lib uses the CallAllStrategy.
+
+##Mountpoints
+
+Some times you will want use different adapters or strategies depending of the path you are working. We solve this using the MountableVirtualStorage.
+MountableVirtualStorage needs be constructed with one VirtualStorage implementation (Adapter or Strategy) and it binds this VirtualStorage to '/'.
+
+After that you can register new mount points.
+
+Example:
+
+```php
+ $localMountPoint = new \Cmp\Storage\MountPoint('/tmp', $this->fileSystemStorage);
+ $publicMountPoint = new \Cmp\Storage\MountPoint('/var/www/app/public', $this->s3Adapter);
+ $vfs = new \Cmp\Storage\MountableVirtualStorage($this->fileSystemStorage); //bind to /
+ $vfs->registerMountPoint($localMountPoint);
+ $vfs->registerMountPoint($publicMountPoint);
+
+ $this->vfs->delete('/tmp/testfile'); //running over filesystem adapter
+ $this->vfs->put('/var/www/app/public/testfile', '..some content..')); //running over AWS S3 adapter
+```
+
+* Movement between mount points are also allowed.
+* You can register adapters, strategies or any class that implements VirtualStorage
+
 
 ###Builtin
 
@@ -131,6 +129,32 @@ __Non fluid calls:__
 * `getStrategy()` : Get the current strategy
 * `getLogger()` :Get the current Logger
 * `hasLoadedAdapters()`Check if one or more adapters has been loaded
+
+
+##Functions available from storage
+
+### Exists
+Check whether a file exists.
+
+### Get
+Read a file and return the content.
+
+### GetStream
+Retrieves a read-stream for a file.
+
+### Rename
+Rename a file.
+
+### Delete
+Delete a file or directory (even if is not empty).
+
+### Put
+Create a file or update if exists. It will create the missing folders.
+
+### PutStream
+Create a file or update if exists. It will create the missing folders.
+
+__*Note:*__ Use stream functions for big files.
 
 
 ### Requirements

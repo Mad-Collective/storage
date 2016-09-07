@@ -1,5 +1,5 @@
 {
-  "name": "cmp/storage",
+  "name": "pluggit/storage",
   "description": "Virtual storage abstraction layer",
   "type": "lib",
   "require": {
