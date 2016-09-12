@@ -22,8 +22,9 @@ class VirtualPath
      */
     public function __construct($path)
     {
-        $this->assertAbsolutePath($path);
-        $this->path = $this->canonicalize($path);
+
+        $this->path = $this->makePathAbsolute($path);
+        $this->path = $this->canonicalize($this->path);
     }
 
     /**
@@ -34,21 +35,38 @@ class VirtualPath
         return $this->path;
     }
 
+
     /**
      * @param $path
      *
-     * @throws InvalidPathException
-     * @throws RelativePathNotAllowed
+     * @return string
      */
-    public function assertAbsolutePath($path)
+    public function makePathAbsolute($path)
+    {
+        if (!$this->isAbsolutePath($path)) {
+            return DIRECTORY_SEPARATOR.join(DIRECTORY_SEPARATOR, [trim(getcwd(), DIRECTORY_SEPARATOR), $path]);
+        }
+
+        return $path;
+
+    }
+
+    /**
+     * @param $path
+     *
+     * @return bool
+     */
+    public function isAbsolutePath($path)
     {
         if (empty($path) || !is_string($path)) {
-            throw new InvalidPathException($path);
+            return false;
         }
 
         if (!($path[0] === DIRECTORY_SEPARATOR || preg_match('~\A[A-Z]:(?![^/\\\\])~i', $path) > 0)) {
-            throw new RelativePathNotAllowed($path);
+            return false;
         }
+
+        return true;
     }
 
     /**

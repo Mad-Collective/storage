@@ -49,11 +49,12 @@ class VirtualPathSpec extends ObjectBehavior
         $this->getPath()->shouldBe('/temp/a/b/d');
     }
 
-    public function it_only_allows_absolute_path()
+    public function it_only_convert_relative_to_absolute_paths()
     {
+        $tmp = getcwd();
         $relative = 'a/b/d/';
         $this->beConstructedWith($relative);
-        $this->shouldThrow(new RelativePathNotAllowed($relative))->duringInstantiation();
+        $this->getPath()->shouldBe($tmp.'/a/b/d');
     }
 
     public function it_returns_if_path_is_child(VirtualPath $v1, VirtualPath $v2, VirtualPath $v3)
