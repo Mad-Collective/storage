@@ -31,7 +31,7 @@ Add this repo to your composer.json
 
 ````json
 "repositories": {
-  "cmp/storage": {
+  "pluggit/storage": {
     "type": "vcs",
     "url": "git@github.com:CMProductions/storage.git"
   }
@@ -41,7 +41,7 @@ Add this repo to your composer.json
 Then require it as usual:
 
 ``` bash
-composer require "cmp/storage"
+composer require "pluggit/storage"
 ```
 
 
