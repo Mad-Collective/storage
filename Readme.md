@@ -12,7 +12,7 @@ Storage is a filesystem abstraction which allows you to easily swap out a local 
 
 //one adapter (save data to S3)
 $s3Adapter = new \Cmp\Storage\Adapter\S3AWSAdapter();
-$s->put('/tmp/test.txt',"this is a test");
+$s3Adapter->put('/tmp/test.txt',"this is a test");
 
 
 //two adapters with a fallback strategy and decorated with a logger
@@ -30,7 +30,7 @@ $fallBackAdapter->put('/tmp/test.txt',"this is a test");
 //one step more fs adapter bind to one folder and strategy to another folder
 $vfs = new \Cmp\Storage\MountableVirtualStorage($fileSystemStorage); //bind to any path that non match with mountpoint folders
 $localMountPoint = new \Cmp\Storage\MountPoint('/tmp', $fileSystemAdapter);
-$publicMountPoint = new \Cmp\Storage\MountPoint('/var/www/app/public', $s3Adapter);
+$publicMountPoint = new \Cmp\Storage\MountPoint('/var/www/app/public', $fallBackAdapter);
 $vfs->registerMountPoint($localMountPoint);
 $vfs->registerMountPoint($publicMountPoint);
 
@@ -106,12 +106,12 @@ Example:
  $localMountPoint = new \Cmp\Storage\MountPoint('/tmp', $fileSystemAdapter);
  $publicMountPoint = new \Cmp\Storage\MountPoint('/var/www/app/public', $s3Adapter);
 
- $vfs = new \Cmp\Storage\MountableVirtualStorage($this->fileSystemStorage); //bind to /
+ $vfs = new \Cmp\Storage\MountableVirtualStorage($fileSystemStorage); //bind to /
  $vfs->registerMountPoint($localMountPoint);
  $vfs->registerMountPoint($publicMountPoint);
 
- $this->vfs->delete('/tmp/testfile'); //running over filesystem adapter
- $this->vfs->put('/var/www/app/public/testfile', '..some content..')); //running over AWS S3 adapter
+ $vfs->delete('/tmp/testfile'); //running over filesystem adapter
+ $vfs->put('/var/www/app/public/testfile', '..some content..')); //running over AWS S3 adapter
 ```
 
 * Movement between mount points are also allowed.
