@@ -59,6 +59,20 @@ class FileSystemAdapterTest extends PHPUnit_Framework_TestCase
         $this->assertFileExists($filenameNew);
     }
 
+    public function testFileCopy()
+    {
+        $filenameOld = $this->getTempFileName();
+        $filenameNew = $this->getTempFileName();
+        $this->assertFileNotExists($filenameOld);
+        $this->assertFileNotExists($filenameNew);
+        $this->assertTrue($this->fileSystemStorage->put($filenameOld, 'testFileRename'));
+        $this->assertFileExists($filenameOld);
+        $this->assertTrue($this->fileSystemStorage->copy($filenameOld, $filenameNew));
+        $this->assertFileExists($filenameOld);
+        $this->assertFileExists($filenameNew);
+    }
+
+
     public function testFileRenameWithOverWrite()
     {
         $filenameOld = $this->getTempFileName();

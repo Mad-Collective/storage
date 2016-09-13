@@ -94,6 +94,21 @@ class CallAllStrategySpec extends ObjectBehavior
         $this->rename($path, $newpath, true)->shouldBe(true);
     }
 
+
+    public function it_wraps_the_copy_call(
+        AdapterInterface $adapter1,
+        AdapterInterface $adapter2,
+        AdapterInterface $adapter3
+    ) {
+        $path = '/b/c';
+        $newpath = '/b/d';
+        $adapter1->copy($path, $newpath)->willReturn(true);
+        $adapter2->copy($path, $newpath)->willReturn(true);
+        $adapter3->copy($path, $newpath)->willReturn(true);
+        $this->copy($path, $newpath)->shouldBe(true);
+    }
+
+
     public function it_wraps_the_delete_call(
         AdapterInterface $adapter1,
         AdapterInterface $adapter2,

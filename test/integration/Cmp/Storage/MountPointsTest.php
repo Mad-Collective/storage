@@ -140,6 +140,23 @@ class MountPointsTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($this->vfs->exists($filenameNew));
     }
 
+    public function copyFilesBetweenEndpoints()
+    {
+        $path = $this->getAvailablePath();
+        $filenameOld = $this->getTempFileNameInPath($path['tmp']);
+        $filenameNew = $this->getTempFileNameInPath($path['public']);
+
+        $this->assertFalse($this->vfs->exists($filenameOld));
+        $this->assertFalse($this->vfs->exists($filenameNew));
+
+        $this->assertTrue($this->vfs->put($filenameOld, 'testFileRename'));
+        $this->assertFalse($this->vfs->exists($filenameNew));
+
+        $this->assertTrue($this->vfs->copy($filenameOld, $filenameNew));
+        $this->assertTrue($this->vfs->exists($filenameOld));
+        $this->assertTrue($this->vfs->exists($filenameNew));
+    }
+
 
     public function testFilePutWithStrategies()
     {

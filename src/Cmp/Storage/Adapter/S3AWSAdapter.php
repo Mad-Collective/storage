@@ -243,12 +243,14 @@ class S3AWSAdapter implements AdapterInterface
     }
 
     /**
-     * @param string $path
-     * @param string $newpath
+     * Copy a file.
+     *
+     * @param string $path      Path to the existing file
+     * @param string $newpath   The destination path of the copy
      *
      * @return bool
      */
-    private function copy($path, $newpath)
+    public function copy($path, $newpath)
     {
         $path = $this->trimPrefix($path);
         $newpath = $this->trimPrefix($newpath);

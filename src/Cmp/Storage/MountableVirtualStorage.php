@@ -42,16 +42,17 @@ class MountableVirtualStorage implements VirtualStorageInterface
     }
 
     /**
-     * @param $path
+     * @param VirtualPath $vp
      *
      * @return MountPoint
+     *
      */
-    public function getMountPointForPath($path)
+    public function getMountPointForPath(VirtualPath $vp)
     {
         $it = $this->mountPoints->getIterator();
-        $virtualPath = new VirtualPath($path);
+
         foreach ($it as $mountPoint) {
-            if ($mountPoint->getVirtualPath()->isChild($virtualPath)) {
+            if ($mountPoint->getVirtualPath()->isChild($vp)) {
                 return $mountPoint;
             }
         }
@@ -61,54 +62,75 @@ class MountableVirtualStorage implements VirtualStorageInterface
 
     public function exists($path)
     {
-        return $this->getStorageForPath($path)->exists($path);
+        $vp = new VirtualPath($path);
+        return $this->getStorageForPath($vp)->exists($vp->getPath());
     }
 
     public function get($path)
     {
-        return $this->getStorageForPath($path)->get($path);
+        $vp = new VirtualPath($path);
+        return $this->getStorageForPath($vp)->get($vp->getPath());
     }
 
     public function getStream($path)
     {
-        return $this->getStorageForPath($path)->getStream($path);
+        $vp = new VirtualPath($path);
+        return $this->getStorageForPath($vp)->getStream($vp->getPath());
     }
 
     public function rename($path, $newpath, $overwrite = false)
     {
-        $storageSrc = $this->getStorageForPath($path);
-        $storageDst = $this->getStorageForPath($newpath);
+        $svp = new VirtualPath($path);
+        $dvp = new VirtualPath($newpath);
+        $storageSrc = $this->getStorageForPath($svp);
+        $storageDst = $this->getStorageForPath($dvp);
 
-        if (!$storageSrc->exists($path)) {
+        if (!$overwrite && $storageDst->exists($dvp->getPath())) {
+            throw new FileExistsException($dvp->getPath());
+
+        }
+
+        return $this->copy($svp->getPath(), $dvp->getPath()) && $storageSrc->delete($svp->getPath());
+    }
+
+
+    public function copy($path, $newpath)
+    {
+        $svp = new VirtualPath($path);
+        $dvp = new VirtualPath($newpath);
+        $storageSrc = $this->getStorageForPath($svp);
+        $storageDst = $this->getStorageForPath($dvp);
+
+        if (!$storageSrc->exists($svp->getPath())) {
             return false;
         }
 
-        if (!$overwrite && $storageDst->exists($newpath)) {
-            throw new FileExistsException($newpath);
-        }
-
-        $stream = $storageSrc->getStream($path);
+        $stream = $storageSrc->getStream($svp->getPath());
         if (!$stream) {
             return false;
         }
-        $storageDst->putStream($newpath, $stream);
+        $storageDst->putStream($dvp->getPath(), $stream);
 
-        return $storageDst->exists($newpath) && $storageSrc->delete($path);
+        return $storageDst->exists($dvp->getPath());
     }
+
 
     public function delete($path)
     {
-        return $this->getStorageForPath($path)->delete($path);
+        $vp = new VirtualPath($path);
+        return $this->getStorageForPath($vp)->delete($vp->getPath());
     }
 
     public function put($path, $contents)
     {
-        return $this->getStorageForPath($path)->put($path, $contents);
+        $vp = new VirtualPath($path);
+        return $this->getStorageForPath($vp)->put($vp->getPath(), $contents);
     }
 
     public function putStream($path, $resource)
     {
-        return $this->getStorageForPath($path)->putStream($path, $resource);
+        $vp = new VirtualPath($path);
+        return $this->getStorageForPath($vp)->putStream($vp->getPath(), $resource);
     }
 
     /**
@@ -123,14 +145,15 @@ class MountableVirtualStorage implements VirtualStorageInterface
         return $defaultMountPoint;
     }
 
+
     /**
-     * @param $path
+     * @param VirtualPath $vp
      *
      * @return VirtualStorageInterface
      */
-    private function getStorageForPath($path)
+    private function getStorageForPath(VirtualPath $vp)
     {
-        $mountPoint = $this->getMountPointForPath($path);
+        $mountPoint = $this->getMountPointForPath($vp);
 
         return $mountPoint->getStorage();
     }

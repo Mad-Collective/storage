@@ -66,7 +66,7 @@ class MountableVirtualStorageSpec extends ObjectBehavior
         $mountPoint->getVirtualPath()->willReturn($v1);
 
         $this->registerMountPoint($mountPoint, $virtualStorage);
-        $this->getMountPointForPath('/tmp/a/b/c/d/f')->shouldBe($mountPoint);
+        $this->getMountPointForPath(new VirtualPath('/tmp/a/b/c/d/f'))->shouldBe($mountPoint);
     }
 
     public function it_always_returns_the_nearest_mount_point(
@@ -99,15 +99,15 @@ class MountableVirtualStorageSpec extends ObjectBehavior
         $test1 = '/tmp/a';
         $test2 = '/tmp/a/b/c';
         $test3 = '/tmp/a/b/c/d/e/f/n';
-        $this->getMountPointForPath($test1)->shouldBe($mountPoint1);
-        $this->getMountPointForPath($test2)->shouldBe($mountPoint1);
-        $this->getMountPointForPath($test3)->shouldBe($mountPoint3);
+        $this->getMountPointForPath(new VirtualPath($test1))->shouldBe($mountPoint1);
+        $this->getMountPointForPath(new VirtualPath($test2))->shouldBe($mountPoint1);
+        $this->getMountPointForPath(new VirtualPath($test3))->shouldBe($mountPoint3);
     }
 
     public function it_has_a_default_virtual_storage(VirtualStorageInterface $defaultVirtualStorage)
     {
         $path = '/tmp/a/b/d/e/f/g';
-        $this->getMountPointForPath($path)->getStorage()->shouldBe($defaultVirtualStorage);
+        $this->getMountPointForPath(new VirtualPath($path))->getStorage()->shouldBe($defaultVirtualStorage);
     }
 
     public function it_can_move_files_between_mount_points(
@@ -146,6 +146,43 @@ class MountableVirtualStorageSpec extends ObjectBehavior
         $this->registerMountPoint($mountPoint2);
 
         $this->rename($fileSrc, $fileDst);
+    }
+
+    public function it_can_copy_files_between_mount_points(
+        VirtualStorageInterface $fsStorage,
+        VirtualStorageInterface $awsStorage,
+        MountPoint $mountPoint1,
+        MountPoint $mountPoint2
+    ) {
+        $pathTemp = '/tmp/';
+        $pathPublic = '/var/www/public';
+
+        $fileSrc = '/tmp/upload.txt';
+        $fileDst = '/var/www/public/assets/upload.txt';
+
+        //stream creation
+        $string = "Hi I'm a stream.";
+        $stream = fopen('php://memory', 'r+');
+        fwrite($stream, $string);
+        rewind($stream);
+
+        $fsStorage->exists($fileSrc)->shouldBeCalled()->willReturn(true);
+        $awsStorage->exists($fileDst)->shouldBeCalled()->willReturn(true);
+        $fsStorage->getStream($fileSrc)->shouldBeCalled()->willReturn($stream);
+        $awsStorage->putStream($fileDst, $stream)->shouldBeCalled()->willReturn(true);
+
+        $mountPoint1->getStorage()->willReturn($fsStorage);
+        $v1 = new VirtualPath($pathTemp);
+        $mountPoint1->getVirtualPath()->willReturn($v1);
+
+        $mountPoint2->getStorage()->willReturn($awsStorage);
+        $v2 = new VirtualPath($pathPublic);
+        $mountPoint2->getVirtualPath()->willReturn($v2);
+
+        $this->registerMountPoint($mountPoint1);
+        $this->registerMountPoint($mountPoint2);
+
+        $this->copy($fileSrc, $fileDst);
     }
 
     public function it_checks_if_some_file_exists_in_the_mount_point(

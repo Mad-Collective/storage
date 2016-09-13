@@ -49,6 +49,17 @@ interface VirtualStorageInterface
      */
     public function rename($path, $newpath, $overwrite = false);
 
+
+    /**
+     * Rename a file.
+     *
+     * @param string $path      Path to the existing file
+     * @param string $newpath   The destination path of the copy
+     *
+     * @return bool
+     */
+    public function copy($path, $newpath);
+
     /**
      * Delete a file or directory.
      *

@@ -144,6 +144,21 @@ class FallBackChainStrategySpec extends ObjectBehavior
         $adapter3->rename($path)->shouldNotHaveBeenCalled();
     }
 
+
+    public function it_wraps_the_copy_call(
+        AdapterInterface $adapter1,
+        AdapterInterface $adapter2,
+        AdapterInterface $adapter3
+    ) {
+        $path = '/b/c';
+        $newpath = '/b/d';
+        $adapter1->copy($path, $newpath)->willReturn(true);
+        $this->copy($path, $newpath)->shouldBe(true);
+
+        $adapter2->copy($path)->shouldNotHaveBeenCalled();
+        $adapter3->copy($path)->shouldNotHaveBeenCalled();
+    }
+
     public function it_wraps_the_delete_call(
         AdapterInterface $adapter1,
         AdapterInterface $adapter2,

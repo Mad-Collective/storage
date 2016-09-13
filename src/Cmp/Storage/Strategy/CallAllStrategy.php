@@ -88,6 +88,23 @@ class CallAllStrategy extends AbstractStorageCallStrategy
     }
 
     /**
+     * Copy a file.
+     *
+     * @param string $path      Path to the existing file
+     * @param string $newpath   The new path of the file
+     *
+     * @return bool
+     */
+    public function copy($path, $newpath)
+    {
+        $fn = function ($adapter) use ($path, $newpath) {
+            return $adapter->copy($path, $newpath);
+        };
+
+        return $this->runAllAndLog($fn);
+    }
+
+    /**
      * Delete a file.
      *
      * @param string $path

@@ -54,6 +54,19 @@ class S3AwsAdapterTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($this->s3Adapter->exists($filenameNew));
     }
 
+    public function testFileCopy()
+    {
+        $filenameOld = $this->getTempFileName();
+        $filenameNew = $this->getTempFileName();
+        $this->assertFalse($this->s3Adapter->exists($filenameOld));
+        $this->assertFalse($this->s3Adapter->exists($filenameNew));
+        $this->assertTrue($this->s3Adapter->put($filenameOld, 'testFileRename'));
+        $this->assertTrue($this->s3Adapter->exists($filenameOld));
+        $this->assertTrue($this->s3Adapter->copy($filenameOld, $filenameNew));
+        $this->assertTrue($this->s3Adapter->exists($filenameOld));
+        $this->assertTrue($this->s3Adapter->exists($filenameNew));
+    }
+
     public function testFileRenameWithOverWrite()
     {
         $filenameOld = $this->getTempFileName();

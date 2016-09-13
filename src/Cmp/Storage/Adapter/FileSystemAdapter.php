@@ -98,6 +98,22 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     }
 
     /**
+     * Copy a file.
+     *
+     * @param string $path      Path to the existing file
+     * @param string $newpath   The destination path of the copy
+     *
+     * @return bool
+     */
+    public function copy($path, $newpath)
+    {
+        $path = $this->normalizePath($path);
+        $this->assertNotFileExists($path);
+
+        return copy($path, $newpath);
+    }
+
+    /**
      * Delete a file or directory.
      *
      * @param string $path

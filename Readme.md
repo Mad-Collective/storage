@@ -10,19 +10,34 @@ Storage is a filesystem abstraction which allows you to easily swap out a local 
 ## TLDR;
 ```php
 
-//faster way
-(new StorageBuilder())->build()->put('/tmp/test.txt',"this is a test");
-
-//more customized
-$sb = new StorageBuilder();
-$s = $sb->addAdapter('S3AWS')
-    ->addAdapter(new DropBox())
-    ->addAdapter('FileSystem')
-    ->setLogger(new Logger())
-    ->build(new \Cmp\Storage\Strategy\FallBackChainStrategy());
+//one adapter (save data to S3)
+$s3Adapter = new \Cmp\Storage\Adapter\S3AWSAdapter();
 $s->put('/tmp/test.txt',"this is a test");
 
 
+//two adapters with a fallback strategy and decorated with a logger
+$s3Adapter = new \Cmp\Storage\Adapter\S3AWSAdapter();
+$fallBackAdapter = (new StorageBuilder())->addAdapter($s3Adapter)
+    ->addAdapter($s3Adapter) //the order matters with FallBackChainStrategy
+    ->addAdapter($fileSystemAdapter)
+    ->setLogger(new Logger())
+    ->build(new \Cmp\Storage\Strategy\FallBackChainStrategy());
+
+//it saves data to S3 and if fails save the data to FS
+$fallBackAdapter->put('/tmp/test.txt',"this is a test");
+
+
+//one step more fs adapter bind to one folder and strategy to another folder
+$vfs = new \Cmp\Storage\MountableVirtualStorage($fileSystemStorage); //bind to any path that non match with mountpoint folders
+$localMountPoint = new \Cmp\Storage\MountPoint('/tmp', $fileSystemAdapter);
+$publicMountPoint = new \Cmp\Storage\MountPoint('/var/www/app/public', $s3Adapter);
+$vfs->registerMountPoint($localMountPoint);
+$vfs->registerMountPoint($publicMountPoint);
+
+/*
+//move file from /tmp (FS) to /var/www/app/public (S3) and if fails try to move from /tmp (FS) to /var/www/app/public (FS)
+*/
+$vfs->move('/tmp/testfile.jpg','/var/www/app/public/avatar.jpg' );
 ```
 
 ## Installation
@@ -55,6 +70,7 @@ The adapter interface contains these methods:
 * `get`
 * `getStream`
 * `rename`
+* `copy`
 * `delete`
 * `put`
 * `putStream`
@@ -84,8 +100,12 @@ After that you can register new mount points.
 Example:
 
 ```php
- $localMountPoint = new \Cmp\Storage\MountPoint('/tmp', $this->fileSystemStorage);
- $publicMountPoint = new \Cmp\Storage\MountPoint('/var/www/app/public', $this->s3Adapter);
+ $s3Adapter = new \Cmp\Storage\Adapter\S3AWSAdapter();
+ $fileSystemAdapter = new \Cmp\Storage\Adapter\FileSystemAdapter();
+
+ $localMountPoint = new \Cmp\Storage\MountPoint('/tmp', $fileSystemAdapter);
+ $publicMountPoint = new \Cmp\Storage\MountPoint('/var/www/app/public', $s3Adapter);
+
  $vfs = new \Cmp\Storage\MountableVirtualStorage($this->fileSystemStorage); //bind to /
  $vfs->registerMountPoint($localMountPoint);
  $vfs->registerMountPoint($publicMountPoint);
@@ -144,6 +164,9 @@ Retrieves a read-stream for a file.
 
 ### Rename
 Rename a file.
+
+### Copy
+Copy a file.
 
 ### Delete
 Delete a file or directory (even if is not empty).
