@@ -49,6 +49,7 @@ class S3AWSAdapter implements AdapterInterface
      */
     public function __construct(array $config = [], $bucket = '')
     {
+        $this->bucket = $bucket;
         if (empty($config) || empty($bucket)) {
             $this->assertMandatoryConfigEnv();
             $config = $this->getConfigFromEnv();
