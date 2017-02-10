@@ -1,9 +1,6 @@
 # Pluggit - Storage
 
-[![Build Status](https://scrutinizer-ci.com/g/jmartin82/virtual-storage/badges/build.png?b=master)](https://scrutinizer-ci.com/g/jmartin82/virtual-storage/build-status/master)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jmartin82/virtual-storage/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jmartin82/virtual-storage/?branch=master)
-[![Code Coverage](https://scrutinizer-ci.com/g/jmartin82/virtual-storage/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/jmartin82/virtual-storage/?branch=master)
-
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/CMProductions/storage/badges/quality-score.png?b=master&s=52f830493e587ebebad057b3bad44c3aad65e4ff)](https://scrutinizer-ci.com/g/CMProductions/storage/?branch=master)
 
 Storage is a filesystem abstraction which allows you to easily swap out a local filesystem for a remote one.
 
