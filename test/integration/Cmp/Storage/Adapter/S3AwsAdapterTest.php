@@ -138,6 +138,14 @@ class S3AwsAdapterTest extends PHPUnit_Framework_TestCase
 
     public function testPathWithPrefix()
     {
+        $s3Adapter = new \Cmp\Storage\Adapter\S3AWSAdapter([], null, '/dir');
+        $prefix = '/dir/folder/';
+        $fileName = $this->getTempFileName();
+        $this->assertFalse($s3Adapter->exists($prefix.$fileName));
+        $this->assertFalse($s3Adapter->exists('/folder/'.$fileName));
+        $this->assertTrue($s3Adapter->put($prefix.$fileName, 'test'));
+        $this->assertTrue($s3Adapter->exists($prefix.$fileName));
+        $this->assertTrue($s3Adapter->exists('/folder/'.$fileName));
     }
 
     private function getTempFileName()
