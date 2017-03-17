@@ -9,7 +9,7 @@ class S3AwsAdapterTest extends PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->s3Adapter = new \Cmp\Storage\Adapter\S3AWSAdapter([], null);
+        $this->s3Adapter = new \Cmp\Storage\Adapter\S3AWSAdapter();
     }
 
     public function testFileExists()
