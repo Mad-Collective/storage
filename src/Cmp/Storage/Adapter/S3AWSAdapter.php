@@ -30,6 +30,11 @@ class S3AWSAdapter implements AdapterInterface
     private $bucket;
 
     /**
+     * @var $pathPrefix
+     */
+    private $pathPrefix;
+
+    /**
      * @var array
      */
     private static $mandatoryEnvVars = [
@@ -44,10 +49,11 @@ class S3AWSAdapter implements AdapterInterface
      *
      * @param array  $config
      * @param string $bucket
+     * @param string $pathPrefix
      *
      * @throws InvalidStorageAdapterException
      */
-    public function __construct(array $config = [], $bucket = '')
+    public function __construct(array $config = [], $bucket = '', $pathPrefix = '')
     {
         $this->bucket = $bucket;
         if (empty($config) || empty($bucket)) {
@@ -56,6 +62,7 @@ class S3AWSAdapter implements AdapterInterface
             $this->bucket = getenv('AWS_BUCKET');
         }
         $this->client = new S3Client($config);
+        $this->pathPrefix = $pathPrefix;
     }
 
     /**
@@ -336,6 +343,8 @@ class S3AWSAdapter implements AdapterInterface
 
     private function trimPrefix($prefix)
     {
+        $from = '/'.preg_quote($this->pathPrefix, '/').'/';
+        $prefix =  preg_replace($from, '', $prefix, 1);
         return ltrim($prefix, '/');
     }
 }
