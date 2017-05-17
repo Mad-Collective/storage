@@ -224,7 +224,7 @@ class S3AWSAdapter implements AdapterInterface
      */
     public function put($path, $contents)
     {
-        $options = [];
+        $options = ['ContentType' => mime_content_type($path)];
         $path = $this->trimPrefix($path);
         try {
             $this->client->upload($this->bucket, $path, $contents, self::ACL_PUBLIC_READ, ['params' => $options]);
@@ -269,6 +269,7 @@ class S3AWSAdapter implements AdapterInterface
                 'Key' => $newpath,
                 'CopySource' => urlencode($this->bucket.'/'.$path),
                 'ACL' => self::ACL_PUBLIC_READ,
+                'ContentType' => mime_content_type($path),
             ]
         );
 
