@@ -35,6 +35,11 @@ class S3AWSAdapter implements AdapterInterface
     private $pathPrefix;
 
     /**
+     * @var \Mimey\MimeTypes
+     */
+    private $mimes;
+
+    /**
      * @var array
      */
     private static $mandatoryEnvVars = [
@@ -63,6 +68,7 @@ class S3AWSAdapter implements AdapterInterface
         }
         $this->client = new S3Client($config);
         $this->pathPrefix = $pathPrefix;
+        $this->mimes = new \Mimey\MimeTypes();
     }
 
     /**
@@ -224,7 +230,7 @@ class S3AWSAdapter implements AdapterInterface
      */
     public function put($path, $contents)
     {
-        $options = [];
+        $options = ['ContentType' => $this->getMimeType($path)];
         $path = $this->trimPrefix($path);
         try {
             $this->client->upload($this->bucket, $path, $contents, self::ACL_PUBLIC_READ, ['params' => $options]);
@@ -269,6 +275,7 @@ class S3AWSAdapter implements AdapterInterface
                 'Key' => $newpath,
                 'CopySource' => urlencode($this->bucket.'/'.$path),
                 'ACL' => self::ACL_PUBLIC_READ,
+                'ContentType' => $this->getMimeType($path),
             ]
         );
 
@@ -346,5 +353,14 @@ class S3AWSAdapter implements AdapterInterface
         $from = '/'.preg_quote($this->pathPrefix, '/').'/';
         $prefix =  preg_replace($from, '', $prefix, 1);
         return ltrim($prefix, '/');
+    }
+
+    private function getMimeType($path)
+    {
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
+        if (empty($ext)) {
+           return 'text/plain';
+        }
+        return $this->mimes->getMimeType($ext);
     }
 }
