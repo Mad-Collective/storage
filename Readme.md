@@ -1,8 +1,6 @@
 # Pluggit - Storage
 
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/CMProductions/storage/badges/quality-score.png?b=master&s=52f830493e587ebebad057b3bad44c3aad65e4ff)](https://scrutinizer-ci.com/g/CMProductions/storage/?branch=master)
-
-[![Build Status](https://travis-ci.org/CMProductions/storage.svg?branch=master)](https://travis-ci.org/CMProductions/storage)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/CMProductions/storage/badges/quality-score.png?b=master&s=52f830493e587ebebad057b3bad44c3aad65e4ff)](https://scrutinizer-ci.com/g/CMProductions/storage/?branch=master) [![Build Status](https://travis-ci.org/CMProductions/storage.svg?branch=master)](https://travis-ci.org/CMProductions/storage) [![Code Coverage](https://scrutinizer-ci.com/g/CMProductions/storage/badges/coverage.png?b=master&s=ed95a3df9c2f657b068ee45d8e285e09020a05ab)](https://scrutinizer-ci.com/g/CMProductions/storage/?branch=master)
 
 Storage is a filesystem abstraction which allows you to easily swap out a local filesystem for a remote one.
 
