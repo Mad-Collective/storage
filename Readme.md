@@ -2,6 +2,8 @@
 
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/CMProductions/storage/badges/quality-score.png?b=master&s=52f830493e587ebebad057b3bad44c3aad65e4ff)](https://scrutinizer-ci.com/g/CMProductions/storage/?branch=master)
 
+[![Build Status](https://travis-ci.org/CMProductions/storage.svg?branch=master)](https://travis-ci.org/CMProductions/storage)
+
 Storage is a filesystem abstraction which allows you to easily swap out a local filesystem for a remote one.
 
 ## TLDR;
@@ -73,21 +75,21 @@ The adapter interface contains these methods:
 * `putStream`
 * `getName`
 
-###Builtin
+### Builtin
 
 This libs is shipped with two builtin adapters ready to use.
 
 * FileSystem: This adapter interacts directly with the host filesystem.
 * S3AWS: This adapter interacts with Amazon S3 service. (You must add some env parameters to use it)
 
-##Strategies
+## Strategies
 
 It allows you specify different call strategies when you have been registered more than one adapter.
 If you want create a custom call strategy you must extend ``\Cmp\Storage\Strategy\AbstractStorageCallStrategies``
 
 __*Note:*__ By default the lib uses the CallAllStrategy.
 
-##Mountpoints
+## Mountpoints
 
 Some times you will want use different adapters or strategies depending of the path you are working. We solve this using the MountableVirtualStorage.
 MountableVirtualStorage needs be constructed with one VirtualStorage implementation (Adapter or Strategy) and it binds this VirtualStorage to '/'.
@@ -115,7 +117,7 @@ Example:
 * You can register adapters, strategies or any class that implements VirtualStorage
 
 
-###Builtin
+### Builtin
 
 There are two ready to use strategies.
 
@@ -123,12 +125,12 @@ There are two ready to use strategies.
 * `\Cmp\Storage\Strategy\CallAllStrategy` : This strategy call all providers to apply the same action. (perfect for fist migration steps)
 
 
-##Logging
+## Logging
 
 The lib provides a default stdout logger but you can change in any moment by any PSR-3 logger compliant.
 
 
-##StorageBuilder
+## StorageBuilder
 
 The storage builder takes te responsibility of create an abstract storage for you.
 
@@ -148,7 +150,7 @@ __Non fluid calls:__
 * `hasLoadedAdapters()`Check if one or more adapters has been loaded
 
 
-##Functions available from storage
+## Functions available from storage
 
 ### Exists
 Check whether a file exists.
