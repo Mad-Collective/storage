@@ -47,9 +47,6 @@ abstract class AbstractStorageCallStrategy implements VirtualStorageInterface, L
             'Add adapter "{adapter}" to strategy "{strategy}".',
             ['adapter' => $adapter->getName(), 'strategy' => $this->getStrategyName()]
         );
-        if ($adapter instanceof LoggerAwareInterface) {
-            $adapter->setLogger($this->logger);
-        }
         $this->adapters[] = $adapter;
     }
 

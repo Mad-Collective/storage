@@ -1,13 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: jordimartin
- * Date: 11/09/2017
- * Time: 12:49
- */
 
 namespace Cmp\Storage\Strategy;
 
+use Cmp\Storage\AdapterInterface;
 use Cmp\Storage\Exception\AdapterException;
 use Cmp\Storage\Exception\FileNotFoundException;
 use Psr\Log\LogLevel;
@@ -54,10 +49,10 @@ trait RunAndLogTrait
     }
 
     /**
-     * @param \Cmp\Storage\VirtualStorageInterface $adapter
+     * @param AdapterInterface $adapter
      * @param \Exception                           $e
      */
-    private function logAdapterException($adapter, $e)
+    private function logAdapterException(AdapterInterface $adapter, $e)
     {
         $this->logger->log(
             LogLevel::ERROR,

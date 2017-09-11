@@ -4,7 +4,6 @@ namespace Cmp\Storage;
 
 use Cmp\Storage\Adapter\FileSystemAdapter;
 use Cmp\Storage\Exception\InvalidStorageAdapterException;
-use Cmp\Storage\Exception\StorageAdapterNotFoundException;
 use Cmp\Storage\Strategy\AbstractStorageCallStrategy;
 use Cmp\Storage\Strategy\DefaultStrategyFactory;
 use Psr\Log\LoggerAwareInterface;
@@ -17,14 +16,6 @@ use Psr\Log\NullLogger;
  */
 class StorageBuilder implements LoggerAwareInterface
 {
-    /**
-     * @var array
-     */
-    private static $builtinAdapters = [];
-    /**
-     * @var bool
-     */
-    private static $builtInAdaptersLoaded = false;
     /**
      * @var
      */
@@ -66,6 +57,8 @@ class StorageBuilder implements LoggerAwareInterface
             $this->setStrategy($callStrategy);
         }
 
+        $this->bindAdaptersLogger();
+
         return $this->createStrategy();
     }
 
@@ -87,62 +80,16 @@ class StorageBuilder implements LoggerAwareInterface
      * @return $this
      *
      * @throws InvalidStorageAdapterException
-     * @throws StorageAdapterNotFoundException
      */
     public function addAdapter($adapter)
     {
-        if (is_string($adapter)) {
-            $this->addBuiltinAdapters();
-            $this->assertBuiltInAdapterExists($adapter);
-            $this->registerAdapter(self::$builtinAdapters[$adapter]);
-
-            return $this;
-        }
-
         if ($adapter instanceof AdapterInterface) {
             $this->registerAdapter($adapter);
 
             return $this;
         }
 
-        throw new InvalidStorageAdapterException('Invalid storage adapter: '.get_class($adapter));
-    }
-
-    /**
-     * @return $this
-     */
-    private function addBuiltinAdapters()
-    {
-        if (!self::$builtInAdaptersLoaded) {
-            self::$builtInAdaptersLoaded = true;
-            foreach (glob(__DIR__.DIRECTORY_SEPARATOR.'Adapter'.DIRECTORY_SEPARATOR.'*.php') as $adapterFileName) {
-                $className = __NAMESPACE__.'\\'.'Adapter'.'\\'.basename($adapterFileName, '.php');
-                try {
-                    $class                                    = new $className();
-                    self::$builtinAdapters[$class->getName()] = $class;
-                } catch (\Exception $e) {
-                    $this->logger->log(
-                        LogLevel::INFO,
-                        'Impossible start {className} client',
-                        ['className' => $className]
-                    );
-                }
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param $adapter
-     *
-     * @throws StorageAdapterNotFoundException
-     */
-    private function assertBuiltInAdapterExists($adapter)
-    {
-        if (!array_key_exists($adapter, self::$builtinAdapters)) {
-            throw new StorageAdapterNotFoundException("Builtin storage \"$adapter\" not found");
-        }
+        throw new InvalidStorageAdapterException('Invalid storage adapter.');
     }
 
     /**
@@ -150,16 +97,22 @@ class StorageBuilder implements LoggerAwareInterface
      */
     private function registerAdapter(AdapterInterface $adapter)
     {
-        if ($this->logger && $adapter instanceof LoggerAwareInterface) {
-            $adapter->setLogger($this->logger);
-        }
         $this->adapters[] = $adapter;
         $this->logger->log(LogLevel::INFO, 'Added new adapter {adapter}', ['adapter' => $adapter->getName()]);
     }
 
     private function getDefaultBuiltinAdapter()
     {
-        return FileSystemAdapter::NAME;
+        return new FileSystemAdapter();
+    }
+
+    private function bindAdaptersLogger()
+    {
+        foreach ($this->adapters as $adapter) {
+            if ($adapter instanceof LoggerAwareInterface) {
+                $adapter->setLogger($this->logger);
+            }
+        }
     }
 
     /**

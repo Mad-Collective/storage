@@ -10,6 +10,8 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 /**
  * Class FileSystemAdapter.
@@ -17,6 +19,7 @@ use Psr\Log\NullLogger;
 class FileSystemAdapter implements AdapterInterface, LoggerAwareInterface
 {
     use LoggerAwareTrait;
+    use LogicalChecksTrait;
 
     /**
      * Adapter Name.
@@ -153,26 +156,6 @@ class FileSystemAdapter implements AdapterInterface, LoggerAwareInterface
     }
 
     /**
-     * @param $newpath
-     * @param $overwrite
-     *
-     * @throws FileExistsException
-     */
-    private function ensureWeCanWriteDestFile($newpath, $overwrite)
-    {
-        if (!$overwrite && $this->exists($newpath)) {
-            $e = new FileExistsException($newpath);
-            $this->logger->log(
-                LogLevel::ERROR,
-                'Adapter "'.$this->getName().'" fails. Des file {path} already exists.',
-                ['exception' => $e, 'path' => $newpath]
-            );
-
-            throw $e;
-        }
-    }
-
-    /**
      * Copy a file.
      *
      * @param string $path    Path to the existing file
@@ -218,26 +201,17 @@ class FileSystemAdapter implements AdapterInterface, LoggerAwareInterface
      */
     private function removeDirectory($path)
     {
-        if (is_dir($path)) {
-            $objects = scandir($path);
-            foreach ($objects as $object) {
-                if ($object != '.' && $object != '..') {
-                    if (is_dir($path.'/'.$object)) {
-                        if (!$this->removeDirectory($path.'/'.$object)) {
-                            return false;
-                        }
-                    } else {
-                        if (!unlink($path.'/'.$object)) {
-                            return false;
-                        }
-                    }
-                }
-            }
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
 
-            return rmdir($path);
+        foreach ($files as $fileinfo) {
+            $todo = ($fileinfo->isDir() ? 'rmdir' : 'unlink');
+            $todo($fileinfo->getRealPath());
         }
 
-        return false;
+        return rmdir($path);
     }
 
     /**

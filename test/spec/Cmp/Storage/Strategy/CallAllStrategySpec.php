@@ -187,7 +187,7 @@ class CallAllStrategySpec extends ObjectBehavior
 
         $dummyAdapter->getName()->willReturn("Dummy adapter");
         $this->setLogger($logger);
-        $dummyAdapter->setLogger($logger)->shouldBeCalled();
+        $dummyAdapter->setLogger($logger);
         $logger->log(LogLevel::INFO,'Add adapter "{adapter}" to strategy "{strategy}".',["adapter" => "Dummy adapter", "strategy" => "CallAllStrategy"])->shouldBeCalled();
         $this->addAdapter($dummyAdapter);
 

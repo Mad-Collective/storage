@@ -28,11 +28,6 @@ class StorageBuilderSpec extends ObjectBehavior
         $this->getLogger()->shouldBe($l);
     }
 
-    public function it_allows_add_builtin_adapters()
-    {
-        $this->addAdapter('FileSystem')->shouldBe($this);
-    }
-
     public function it_allows_add_already_initialized_adapter(AdapterInterface $vi)
     {
         $this->addAdapter($vi)->shouldBe($this);
@@ -40,9 +35,8 @@ class StorageBuilderSpec extends ObjectBehavior
 
     public function it_throw_and_exception_when_the_adapter_is_not_valid()
     {
-        $this->shouldThrow('\Cmp\Storage\Exception\StorageAdapterNotFoundException')->during('addAdapter', ['string']);
+        $this->shouldThrow('\Cmp\Storage\Exception\InvalidStorageAdapterException')->during('addAdapter', ['string']);
         $s = new \stdClass();
-        $this->shouldThrow('\Cmp\Storage\Exception\InvalidStorageAdapterException')->during('addAdapter', [$s, []]);
         $this->shouldThrow('\Cmp\Storage\Exception\InvalidStorageAdapterException')->during('addAdapter', [$s]);
     }
 
@@ -57,7 +51,10 @@ class StorageBuilderSpec extends ObjectBehavior
         $this->setLogger($loggerInterface);
         $this->addAdapter($adapterWithLogger);
 
+        $this->build();
+
         $adapterWithLogger->setLogger(Argument::any())->shouldHaveBeenCalled();
+
     }
 
     public function it_loads_the_the_default_if_no_other_has_been_been_added(AbstractStorageCallStrategy $callStrategy)

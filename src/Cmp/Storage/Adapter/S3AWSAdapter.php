@@ -24,6 +24,7 @@ use Psr\Log\NullLogger;
 class S3AWSAdapter implements AdapterInterface, LoggerAwareInterface
 {
     use LoggerAwareTrait;
+    use LogicalChecksTrait;
 
     const ACL_PUBLIC_READ = 'public-read';
     /**
@@ -55,6 +56,16 @@ class S3AWSAdapter implements AdapterInterface, LoggerAwareInterface
      * @var MimeTypes
      */
     private $mimes;
+    /**
+     * @var array
+     */
+    private $config;
+    /**
+     * @var array
+     */
+    private $options = [
+        'ACL' => self::ACL_PUBLIC_READ,
+    ];
 
     /**
      * S3AWSAdapter constructor.
@@ -62,10 +73,11 @@ class S3AWSAdapter implements AdapterInterface, LoggerAwareInterface
      * @param array  $config
      * @param string $bucket
      * @param string $pathPrefix
+     * @param array  $options
      *
      * @throws InvalidStorageAdapterException
      */
-    public function __construct(array $config = [], $bucket = '', $pathPrefix = '')
+    public function __construct(array $config = [], $bucket = '', $pathPrefix = '', $options = [])
     {
         $this->bucket = $bucket;
         $this->logger = new NullLogger();
@@ -77,6 +89,8 @@ class S3AWSAdapter implements AdapterInterface, LoggerAwareInterface
         $this->client     = new S3Client($config);
         $this->pathPrefix = $pathPrefix;
         $this->mimes      = new MimeTypes();
+        $this->config     = $config;
+        $this->options    = array_merge($this->options, $options);
     }
 
     /**
@@ -228,76 +242,6 @@ class S3AWSAdapter implements AdapterInterface, LoggerAwareInterface
     }
 
     /**
-     * @param $newpath
-     * @param $overwrite
-     *
-     * @throws FileExistsException
-     */
-    private function ensureWeCanWriteDestFile($newpath, $overwrite)
-    {
-        if (!$overwrite && $this->exists($newpath)) {
-            $e = new FileExistsException($newpath);
-            $this->logger->log(
-                LogLevel::ERROR,
-                'Adapter "'.$this->getName().'" fails. Des file {path} already exists.',
-                ['exception' => $e, 'path' => $newpath]
-            );
-
-            throw $e;
-        }
-    }
-
-    /**
-     * Check whether a file exists.
-     *
-     * @param string $path
-     *
-     * @return bool
-     */
-    public function exists($path)
-    {
-        $path = $this->trimPrefix($path);
-        if ($this->client->doesObjectExist($this->bucket, $path)) {
-            return true;
-        }
-
-        return $this->doesDirectoryExist($path);
-    }
-
-    /**
-     * @param $path
-     *
-     * @return bool
-     *
-     * @throws AdapterException
-     */
-    private function doesDirectoryExist($path)
-    {
-        $command = $this->client->getCommand(
-            'listObjects',
-            [
-                'Bucket'  => $this->bucket,
-                'Prefix'  => $this->trimPrefix($path).'/',
-                'MaxKeys' => 1,
-            ]
-        );
-
-        try {
-            $result = $this->client->execute($command);
-
-            return $result['Contents'] || $result['CommonPrefixes'];
-        } catch (S3Exception $e) {
-            $this->logger->log(
-                LogLevel::ERROR,
-                'Adapter "'.$this->getName().'" fails. Impossible get information about directory {path}.',
-                ['exception' => $e, 'from' => $path]
-            );
-
-            return false;
-        }
-    }
-
-    /**
      * Copy a file.
      *
      * @param string $path    Path to the existing file
@@ -315,7 +259,7 @@ class S3AWSAdapter implements AdapterInterface, LoggerAwareInterface
                 'Bucket'      => $this->bucket,
                 'Key'         => $newpath,
                 'CopySource'  => urlencode($this->bucket.'/'.$path),
-                'ACL'         => self::ACL_PUBLIC_READ,
+                'ACL'         => $this->options['ACL'],
                 'ContentType' => $this->getMimeType($path),
             ]
         );
@@ -379,6 +323,56 @@ class S3AWSAdapter implements AdapterInterface, LoggerAwareInterface
     }
 
     /**
+     * @param $path
+     *
+     * @return bool
+     *
+     * @throws AdapterException
+     */
+    private function doesDirectoryExist($path)
+    {
+        $command = $this->client->getCommand(
+            'listObjects',
+            [
+                'Bucket'  => $this->bucket,
+                'Prefix'  => $this->trimPrefix($path).'/',
+                'MaxKeys' => 1,
+            ]
+        );
+
+        try {
+            $result = $this->client->execute($command);
+
+            return $result['Contents'] || $result['CommonPrefixes'];
+        } catch (S3Exception $e) {
+            $this->logger->log(
+                LogLevel::ERROR,
+                'Adapter "'.$this->getName().'" fails. Impossible get information about directory {path}.',
+                ['exception' => $e, 'from' => $path]
+            );
+
+            return false;
+        }
+    }
+
+    /**
+     * Check whether a file exists.
+     *
+     * @param string $path
+     *
+     * @return bool
+     */
+    public function exists($path)
+    {
+        $path = $this->trimPrefix($path);
+        if ($this->client->doesObjectExist($this->bucket, $path)) {
+            return true;
+        }
+
+        return $this->doesDirectoryExist($path);
+    }
+
+    /**
      * Create a file or update if exists. It will create the missing folders.
      *
      * @param string   $path     The path to the file
@@ -408,7 +402,7 @@ class S3AWSAdapter implements AdapterInterface, LoggerAwareInterface
         $options = ['ContentType' => $this->getMimeType($path)];
         $path    = $this->trimPrefix($path);
         try {
-            $this->client->upload($this->bucket, $path, $contents, self::ACL_PUBLIC_READ, ['params' => $options]);
+            $this->client->upload($this->bucket, $path, $contents, $this->options['ACL'], ['params' => $options]);
         } catch (S3Exception $e) {
             $this->logger->log(
                 LogLevel::ERROR,
