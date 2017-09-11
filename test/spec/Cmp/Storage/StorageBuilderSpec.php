@@ -95,12 +95,4 @@ class StorageBuilderSpec extends ObjectBehavior
         $storage->getStrategyName()->shouldBe($strategyName);
     }
 
-    public function it_builds_a_virtual_storage_with_specific_call_strategy_and_logger_provider(
-        AdapterInterface $a,
-        AbstractStorageCallStrategy $callStrategy,
-        LoggerInterface $loggerInterface
-    ) {
-        $this->addAdapter($a);
-        $this->build($callStrategy, $loggerInterface)->shouldHaveType('\Cmp\Storage\VirtualStorageInterface');
-    }
 }

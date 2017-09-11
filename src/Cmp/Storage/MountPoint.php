@@ -24,7 +24,7 @@ class MountPoint
      */
     public function __construct($path, VirtualStorageInterface $virtualStorage)
     {
-        $this->virtualPath = new VirtualPath($path);
+        $this->virtualPath    = new VirtualPath($path);
         $this->virtualStorage = $virtualStorage;
     }
 

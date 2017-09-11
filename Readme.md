@@ -31,9 +31,8 @@ $publicMountPoint = new \Cmp\Storage\MountPoint('/var/www/app/public', $fallBack
 $vfs->registerMountPoint($localMountPoint);
 $vfs->registerMountPoint($publicMountPoint);
 
-/*
+
 //move file from /tmp (FS) to /var/www/app/public (S3) and if fails try to move from /tmp (FS) to /var/www/app/public (FS)
-*/
 $vfs->move('/tmp/testfile.jpg','/var/www/app/public/avatar.jpg' );
 ```
 

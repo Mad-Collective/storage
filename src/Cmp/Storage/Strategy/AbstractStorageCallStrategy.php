@@ -5,41 +5,23 @@ namespace Cmp\Storage\Strategy;
 use Cmp\Storage\AdapterInterface;
 use Cmp\Storage\VirtualStorageInterface;
 use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerInterface;
+use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LogLevel;
+use Psr\Log\NullLogger;
 
 /**
  * Class AbstractStorageCallStrategy.
  */
 abstract class AbstractStorageCallStrategy implements VirtualStorageInterface, LoggerAwareInterface
 {
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
+    use LoggerAwareTrait;
+
     private $adapters;
 
     public function __construct()
     {
         $this->adapters = [];
-    }
-
-    public function addAdapter(AdapterInterface $adapter)
-    {
-        $this->log(
-            LogLevel::INFO,
-            'Add adapter "{{adapter}}" to strategy "{{strategy}}"',
-            ['adapter' => $adapter->getName(), 'strategy' => $this->getStrategyName()]
-        );
-        $this->adapters[] = $adapter;
-    }
-
-    public function setAdapters(array $adapters)
-    {
-        $this->adapters = [];
-        foreach ($adapters as $adapter) {
-            $this->addAdapter($adapter);
-        }
+        $this->logger   = new NullLogger();
     }
 
     /**
@@ -50,27 +32,25 @@ abstract class AbstractStorageCallStrategy implements VirtualStorageInterface, L
         return $this->adapters;
     }
 
-    /**
-     * @param LoggerInterface $logger
-     */
-    public function setLogger(LoggerInterface $logger)
+    public function setAdapters(array $adapters)
     {
-        $this->logger = $logger;
+        $this->adapters = [];
+        foreach ($adapters as $adapter) {
+            $this->addAdapter($adapter);
+        }
     }
 
-    /**
-     * Logs with an arbitrary level.
-     *
-     * @param mixed  $level
-     * @param string $message
-     * @param array  $context
-     */
-    public function log($level, $message, array $context = array())
+    public function addAdapter(AdapterInterface $adapter)
     {
-        if (!$this->logger) {
-            return;
+        $this->logger->log(
+            LogLevel::INFO,
+            'Add adapter "{adapter}" to strategy "{strategy}".',
+            ['adapter' => $adapter->getName(), 'strategy' => $this->getStrategyName()]
+        );
+        if ($adapter instanceof LoggerAwareInterface) {
+            $adapter->setLogger($this->logger);
         }
-        $this->logger->log($level, $message, $context);
+        $this->adapters[] = $adapter;
     }
 
     abstract public function getStrategyName();

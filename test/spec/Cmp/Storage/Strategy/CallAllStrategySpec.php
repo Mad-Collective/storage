@@ -2,6 +2,7 @@
 
 namespace spec\Cmp\Storage\Strategy;
 
+use Cmp\Storage\Adapter\FileSystemAdapter;
 use Cmp\Storage\AdapterInterface;
 use Cmp\Storage\Exception\FileNotFoundException;
 use PhpSpec\ObjectBehavior;
@@ -81,7 +82,7 @@ class CallAllStrategySpec extends ObjectBehavior
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
-        $path = '/b/c';
+        $path    = '/b/c';
         $newpath = '/b/d';
         $adapter1->rename($path, $newpath, false)->willReturn(true);
         $adapter2->rename($path, $newpath, false)->willReturn(true);
@@ -94,20 +95,18 @@ class CallAllStrategySpec extends ObjectBehavior
         $this->rename($path, $newpath, true)->shouldBe(true);
     }
 
-
     public function it_wraps_the_copy_call(
         AdapterInterface $adapter1,
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
-        $path = '/b/c';
+        $path    = '/b/c';
         $newpath = '/b/d';
         $adapter1->copy($path, $newpath)->willReturn(true);
         $adapter2->copy($path, $newpath)->willReturn(true);
         $adapter3->copy($path, $newpath)->willReturn(true);
         $this->copy($path, $newpath)->shouldBe(true);
     }
-
 
     public function it_wraps_the_delete_call(
         AdapterInterface $adapter1,
@@ -138,7 +137,7 @@ class CallAllStrategySpec extends ObjectBehavior
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
-        $path = '/b/c';
+        $path     = '/b/c';
         $contents = 'hi!';
         $adapter1->get($path)->willReturn($contents);
         $this->get($path)->shouldBe($contents);
@@ -169,9 +168,9 @@ class CallAllStrategySpec extends ObjectBehavior
         AdapterInterface $adapter2,
         AdapterInterface $adapter3
     ) {
-        $path = '/b/c';
+        $path     = '/b/c';
         $contents = 'hi!';
-        $stream = 'stream';
+        $stream   = 'stream';
         $adapter1->put($path, $contents)->willReturn(true);
         $adapter2->put($path, $contents)->willReturn(true);
         $adapter3->put($path, $contents)->willReturn(true);
@@ -181,5 +180,22 @@ class CallAllStrategySpec extends ObjectBehavior
         $adapter2->putStream($path, $stream)->willReturn(true);
         $adapter3->putStream($path, $stream)->willReturn(true);
         $this->putStream($path, $stream)->shouldBe(true);
+    }
+
+    public function it_log_on_action_error(FileSystemAdapter $dummyAdapter, LoggerInterface $logger)
+    {
+
+        $dummyAdapter->getName()->willReturn("Dummy adapter");
+        $this->setLogger($logger);
+        $dummyAdapter->setLogger($logger)->shouldBeCalled();
+        $logger->log(LogLevel::INFO,'Add adapter "{adapter}" to strategy "{strategy}".',["adapter" => "Dummy adapter", "strategy" => "CallAllStrategy"])->shouldBeCalled();
+        $this->addAdapter($dummyAdapter);
+
+        $path     = '/b/c';
+        $contents = 'hi!';
+        $dummyAdapter->put($path, $contents)->willReturn(false);
+        $logger->log(LogLevel::ERROR,"Impossible put file {file}.",["file" => "/b/c"])->shouldBeCalled();
+        $this->put($path, $contents)->shouldBe(false);
+
     }
 }

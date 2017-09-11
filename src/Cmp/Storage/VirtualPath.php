@@ -2,9 +2,6 @@
 
 namespace Cmp\Storage;
 
-use Cmp\Storage\Exception\InvalidPathException;
-use Cmp\Storage\Exception\RelativePathNotAllowed;
-
 /**
  * Class VirtualPath.
  */
@@ -22,19 +19,9 @@ class VirtualPath
      */
     public function __construct($path)
     {
-
         $this->path = $this->makePathAbsolute($path);
         $this->path = $this->canonicalize($this->path);
     }
-
-    /**
-     * @return string
-     */
-    public function getPath()
-    {
-        return $this->path;
-    }
-
 
     /**
      * @param $path
@@ -48,7 +35,6 @@ class VirtualPath
         }
 
         return $path;
-
     }
 
     /**
@@ -76,9 +62,9 @@ class VirtualPath
      */
     private function canonicalize($path)
     {
-        $path = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $path);
-        $parts = array_filter(explode(DIRECTORY_SEPARATOR, $path), 'strlen');
-        $absolutes = array();
+        $path      = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+        $parts     = array_filter(explode(DIRECTORY_SEPARATOR, $path), 'strlen');
+        $absolutes = [];
         foreach ($parts as $part) {
             if ('.' == $part) {
                 continue;
@@ -105,5 +91,13 @@ class VirtualPath
         }
 
         return strpos($path->getPath(), $this->getPath()) === 0;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPath()
+    {
+        return $this->path;
     }
 }
