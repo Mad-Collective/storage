@@ -20,7 +20,7 @@ trait LogicalChecksTrait
             $e = new FileExistsException($newpath);
             $this->logger->log(
                 LogLevel::ERROR,
-                'Adapter "'.$this->getName().'" fails. Des file {path} already exists.',
+                'Adapter "'.$this->getName().'" fails. Destination file {path} already exists.',
                 ['exception' => $e, 'path' => $newpath]
             );
 

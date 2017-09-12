@@ -50,14 +50,14 @@ trait RunAndLogTrait
 
     /**
      * @param AdapterInterface $adapter
-     * @param \Exception                           $e
+     * @param \Exception       $exception
      */
-    private function logAdapterException(AdapterInterface $adapter, $e)
+    private function logAdapterException(AdapterInterface $adapter, \Exception $exception)
     {
         $this->logger->log(
             LogLevel::ERROR,
             'Adapter "'.$adapter->getName().'" fails.',
-            ['exception' => $e]
+            ['exception' => $exception]
         );
     }
 

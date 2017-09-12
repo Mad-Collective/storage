@@ -77,7 +77,7 @@ class S3AWSAdapter implements AdapterInterface, LoggerAwareInterface
      *
      * @throws InvalidStorageAdapterException
      */
-    public function __construct(array $config = [], $bucket = '', $pathPrefix = '', $options = [])
+    public function __construct(array $config = [], $bucket = '', $pathPrefix = '', array $options = [])
     {
         $this->bucket = $bucket;
         $this->logger = new NullLogger();
