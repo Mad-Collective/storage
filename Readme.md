@@ -187,5 +187,5 @@ __*Note:*__ Use stream functions for big files.
 * Fork the repo.
 * Fix an issue or add a new adapter or improve something or whatever you want.
 * Follow the PSR-2 style.
-* Run the tests. (add more tests if is needed).
+* Run `make tests`. (add more tests if is needed).
 * Make a pull request.
