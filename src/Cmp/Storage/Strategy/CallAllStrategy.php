@@ -2,16 +2,15 @@
 
 namespace Cmp\Storage\Strategy;
 
-use Cmp\Storage\Exception\AdapterException;
-use Cmp\Storage\Exception\FileNotFoundException;
-use Cmp\Storage\Exception\StorageException;
-use Psr\Log\LogLevel;
+use Cmp\Storage\AdapterInterface;
 
 /**
  * Class CallAllStrategy.
  */
 class CallAllStrategy extends AbstractStorageCallStrategy
 {
+    use  RunAndLogTrait;
+
     public function getStrategyName()
     {
         return 'CallAllStrategy';
@@ -26,11 +25,11 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function exists($path)
     {
-        $fn = function ($adapter) use ($path) {
+        $fn = function (AdapterInterface $adapter) use ($path) {
             return $adapter->exists($path);
         };
 
-        return $this->runAllAndLog($fn);
+        return $this->runAll($fn);
     }
 
     /**
@@ -44,11 +43,11 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function get($path)
     {
-        $fn = function ($adapter) use ($path) {
+        $fn = function (AdapterInterface $adapter) use ($path) {
             return $adapter->get($path);
         };
 
-        return $this->runOneAndLog($fn, $path);
+        return $this->logOnFalse($this->runOne($fn, $path), "Impossible get file: {file}.", ['file' => $path]);
     }
 
     /**
@@ -62,11 +61,15 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function getStream($path)
     {
-        $fn = function ($adapter) use ($path) {
+        $fn = function (AdapterInterface $adapter) use ($path) {
             return $adapter->getStream($path);
         };
 
-        return $this->runOneAndLog($fn, $path);
+        return $this->logOnFalse(
+            $this->runOne($fn, $path),
+            "Impossible get stream form file: {file}.",
+            ['file' => $path]
+        );
     }
 
     /**
@@ -80,28 +83,36 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function rename($path, $newpath, $overwrite = false)
     {
-        $fn = function ($adapter) use ($path, $newpath, $overwrite) {
+        $fn = function (AdapterInterface $adapter) use ($path, $newpath, $overwrite) {
             return $adapter->rename($path, $newpath, $overwrite);
         };
 
-        return $this->runAllAndLog($fn);
+        return $this->logOnFalse(
+            $this->runAll($fn),
+            "Impossible rename file from {from} to {to}.",
+            ['from' => $path, 'to' => $newpath]
+        );
     }
 
     /**
      * Copy a file.
      *
-     * @param string $path      Path to the existing file
-     * @param string $newpath   The new path of the file
+     * @param string $path    Path to the existing file
+     * @param string $newpath The new path of the file
      *
      * @return bool
      */
     public function copy($path, $newpath)
     {
-        $fn = function ($adapter) use ($path, $newpath) {
+        $fn = function (AdapterInterface $adapter) use ($path, $newpath) {
             return $adapter->copy($path, $newpath);
         };
 
-        return $this->runAllAndLog($fn);
+        return $this->logOnFalse(
+            $this->runAll($fn),
+            "Impossible copy file from {from} to {to}.",
+            ['from' => $path, 'to' => $newpath]
+        );
     }
 
     /**
@@ -115,11 +126,11 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function delete($path)
     {
-        $fn = function ($adapter) use ($path) {
+        $fn = function (AdapterInterface $adapter) use ($path) {
             return $adapter->delete($path);
         };
 
-        return $this->runAllAndLog($fn);
+        return $this->logOnFalse($this->runAll($fn), "Impossible delete file {file}.", ['file' => $path]);
     }
 
     /**
@@ -134,11 +145,11 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      */
     public function put($path, $contents)
     {
-        $fn = function ($adapter) use ($path, $contents) {
+        $fn = function (AdapterInterface $adapter) use ($path, $contents) {
             return $adapter->put($path, $contents);
         };
 
-        return $this->runAllAndLog($fn);
+        return $this->logOnFalse($this->runAll($fn), "Impossible put file {file}.", ['file' => $path]);
     }
 
     /**
@@ -147,77 +158,16 @@ class CallAllStrategy extends AbstractStorageCallStrategy
      * @param string   $path     The path to the file
      * @param resource $resource The file handle
      *
-     * @throws \Cmp\Storage\Exception\InvalidArgumentException Thrown if $resource is not a resource
+     * @throws \InvalidArgumentException Thrown if $resource is not a resource
      *
      * @return bool True on success, false on failure
      */
     public function putStream($path, $resource)
     {
-        $fn = function ($adapter) use ($path, $resource) {
+        $fn = function (AdapterInterface $adapter) use ($path, $resource) {
             return $adapter->putStream($path, $resource);
         };
 
-        return $this->runAllAndLog($fn);
-    }
-
-    /**
-     * @param callable $fn
-     *
-     * @return bool
-     */
-    private function runAllAndLog(callable $fn)
-    {
-        $result = false;
-
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                $result = $fn($adapter) || $result;
-            } catch (\Exception $e) {
-                $this->logAdapterException($adapter, $e);
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Gets one file from all the adapters.
-     *
-     * @param callable $fn
-     * @param string   $path
-     *
-     * @return mixed
-     *
-     * @throws StorageException
-     */
-    private function runOneAndLog(callable $fn, $path)
-    {
-        $defaultException = new FileNotFoundException($path);
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                $file = $fn($adapter);
-                if ($file !== false) {
-                    return $file;
-                }
-            } catch (\Exception $exception) {
-                $defaultException = new AdapterException($path, $exception);
-                $this->logAdapterException($adapter, $exception);
-            }
-        }
-
-        throw $defaultException;
-    }
-
-    /**
-     * @param \Cmp\Storage\AdapterInterface $adapter
-     * @param \Exception                    $e
-     */
-    private function logAdapterException($adapter, $e)
-    {
-        $this->log(
-            LogLevel::ERROR,
-            'Adapter "'.$adapter->getName().'" fails.',
-            ['exception' => $e]
-        );
+        return $this->logOnFalse($this->runAll($fn), "Impossible put file stream {file}.", ['file' => $path]);
     }
 }

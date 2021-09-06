@@ -10,6 +10,7 @@ use Exception;
 class InvalidStorageAdapterException extends StorageException
 {
     const CODE = 1004;
+
     /**
      * InvalidStorageAdapterException constructor.
      *

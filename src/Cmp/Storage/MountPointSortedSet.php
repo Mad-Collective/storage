@@ -34,13 +34,11 @@ class MountPointSortedSet implements IteratorAggregate
     }
 
     /**
-     * @param $path
-     *
      * @return bool
      */
-    public function contains($path)
+    private function sort()
     {
-        return isset($this->mountPoints[$path]);
+        return uksort($this->mountPoints, [$this, 'compare']);
     }
 
     /**
@@ -62,6 +60,16 @@ class MountPointSortedSet implements IteratorAggregate
      *
      * @return bool
      */
+    public function contains($path)
+    {
+        return isset($this->mountPoints[$path]);
+    }
+
+    /**
+     * @param $path
+     *
+     * @return bool
+     */
     public function remove($path)
     {
         if (!$this->contains($path)) {
@@ -71,6 +79,21 @@ class MountPointSortedSet implements IteratorAggregate
         unset($this->mountPoints[$path]);
 
         return true;
+    }
+
+    /**
+     * Retrieve an external iterator.
+     *
+     * @link  http://php.net/manual/en/iteratoraggregate.getiterator.php
+     *
+     * @return Traversable An instance of an object implementing <b>Iterator</b> or
+     *                     <b>Traversable</b>
+     *
+     * @since 5.0.0
+     */
+    public function getIterator()
+    {
+        return new ArrayIterator($this->mountPoints);
     }
 
     /**
@@ -89,28 +112,5 @@ class MountPointSortedSet implements IteratorAggregate
         }
 
         return $s2 - $s1;
-    }
-
-    /**
-     * @return bool
-     */
-    private function sort()
-    {
-        return uksort($this->mountPoints, [$this, 'compare']);
-    }
-
-    /**
-     * Retrieve an external iterator.
-     *
-     * @link  http://php.net/manual/en/iteratoraggregate.getiterator.php
-     *
-     * @return Traversable An instance of an object implementing <b>Iterator</b> or
-     *                     <b>Traversable</b>
-     *
-     * @since 5.0.0
-     */
-    public function getIterator()
-    {
-        return new ArrayIterator($this->mountPoints);
     }
 }

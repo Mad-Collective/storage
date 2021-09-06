@@ -31,9 +31,8 @@ $publicMountPoint = new \Cmp\Storage\MountPoint('/var/www/app/public', $fallBack
 $vfs->registerMountPoint($localMountPoint);
 $vfs->registerMountPoint($publicMountPoint);
 
-/*
+
 //move file from /tmp (FS) to /var/www/app/public (S3) and if fails try to move from /tmp (FS) to /var/www/app/public (FS)
-*/
 $vfs->move('/tmp/testfile.jpg','/var/www/app/public/avatar.jpg' );
 ```
 
@@ -139,7 +138,7 @@ __Fluid calls:__
 * `setStrategy(AbstractStorageCallStrategy $strategy)` : Set a custom strategy
 * `setLogger(LoggerInterface $logger)` : Set custom logger
 * `addAdapter($adapter)` : Add a new adapter
-* `build(AbstractStorageCallStrategy $callStrategy = null, LoggerInterface $logger = null)` : Build the virtual storage
+* `build(AbstractStorageCallStrategy $callStrategy = null)` : Build the virtual storage
 
 __Non fluid calls:__
 

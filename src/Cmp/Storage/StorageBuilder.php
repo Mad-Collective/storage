@@ -4,12 +4,12 @@ namespace Cmp\Storage;
 
 use Cmp\Storage\Adapter\FileSystemAdapter;
 use Cmp\Storage\Exception\InvalidStorageAdapterException;
-use Cmp\Storage\Exception\StorageAdapterNotFoundException;
 use Cmp\Storage\Strategy\AbstractStorageCallStrategy;
 use Cmp\Storage\Strategy\DefaultStrategyFactory;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use Psr\Log\NullLogger;
 
 /**
  * Class StorageBuilder.
@@ -28,14 +28,6 @@ class StorageBuilder implements LoggerAwareInterface
      * @var array
      */
     private $adapters;
-    /**
-     * @var array
-     */
-    private static $builtinAdapters = [];
-    /**
-     * @var bool
-     */
-    private static $builtInAdaptersLoaded = false;
 
     /**
      * StorageBuilder constructor.
@@ -43,35 +35,41 @@ class StorageBuilder implements LoggerAwareInterface
     public function __construct()
     {
         $this->adapters = [];
+        $this->logger   = new NullLogger();
     }
 
     /**
-     * Set a custom strategy.
+     * Build the virtual storage.
      *
-     * @param AbstractStorageCallStrategy $strategy
+     * @param                 $callStrategy
      *
-     * @return $this
+     * @return VirtualStorageInterface
+     *
+     * @throws InvalidStorageAdapterException
      */
-    public function setStrategy(AbstractStorageCallStrategy $strategy)
+    public function build(AbstractStorageCallStrategy $callStrategy = null)
     {
-        $this->log(LogLevel::INFO, 'Set the strategy {{strategy}}', ['strategy' => $strategy->getStrategyName()]);
-        $this->strategy = $strategy;
+        if (!$this->hasLoadedAdapters()) {
+            $this->addAdapter($this->getDefaultBuiltinAdapter());
+        }
 
-        return $this;
+        if ($callStrategy != null) {
+            $this->setStrategy($callStrategy);
+        }
+
+        $this->bindAdaptersLogger();
+
+        return $this->createStrategy();
     }
 
     /**
-     * Set custom logger.
+     * Check if one or more adapters has been loaded.
      *
-     * @param LoggerInterface $logger
-     *
-     * @return $this
+     * @return bool
      */
-    public function setLogger(LoggerInterface $logger)
+    public function hasLoadedAdapters()
     {
-        $this->logger = $logger;
-
-        return $this;
+        return !empty($this->adapters);
     }
 
     /**
@@ -82,51 +80,56 @@ class StorageBuilder implements LoggerAwareInterface
      * @return $this
      *
      * @throws InvalidStorageAdapterException
-     * @throws StorageAdapterNotFoundException
      */
     public function addAdapter($adapter)
     {
-        if (is_string($adapter)) {
-            $this->addBuiltinAdapters();
-            $this->assertBuiltInAdapterExists($adapter);
-            $this->registerAdapter(self::$builtinAdapters[$adapter]);
-
-            return $this;
-        }
-
         if ($adapter instanceof AdapterInterface) {
             $this->registerAdapter($adapter);
 
             return $this;
         }
 
-        throw new InvalidStorageAdapterException('Invalid storage adapter: '.get_class($adapter));
+        throw new InvalidStorageAdapterException('Invalid storage adapter.');
     }
 
     /**
-     * Build the virtual storage.
-     *
-     * @param                 $callStrategy
-     * @param LoggerInterface $logger
-     *
-     * @return VirtualStorageInterface
-     *
-     * @throws InvalidStorageAdapterException
+     * @param AdapterInterface $adapter
      */
-    public function build(AbstractStorageCallStrategy $callStrategy = null, LoggerInterface $logger = null)
+    private function registerAdapter(AdapterInterface $adapter)
     {
-        if (!$this->hasLoadedAdapters()) {
-            $this->addAdapter($this->getDefaultBuiltinAdapter());
-        }
+        $this->adapters[] = $adapter;
+        $this->logger->log(LogLevel::INFO, 'Added new adapter {adapter}', ['adapter' => $adapter->getName()]);
+    }
 
-        if ($callStrategy != null) {
-            $this->setStrategy($callStrategy);
-        }
-        if ($logger != null) {
-            $this->setLogger($logger);
-        }
+    private function getDefaultBuiltinAdapter()
+    {
+        return new FileSystemAdapter();
+    }
 
-        return $this->createStrategy();
+    private function bindAdaptersLogger()
+    {
+        foreach ($this->adapters as $adapter) {
+            if ($adapter instanceof LoggerAwareInterface) {
+                $adapter->setLogger($this->logger);
+            }
+        }
+    }
+
+    /**
+     * @return AbstractStorageCallStrategy
+     */
+    private function createStrategy()
+    {
+        $strategy = $this->getStrategy();
+        $strategy->setLogger($this->logger);
+        $strategy->setAdapters($this->adapters);
+        $this->logger->log(
+            LogLevel::INFO,
+            'Creating strategy {strategy}',
+            ['strategy' => $strategy->getStrategyName()]
+        );
+
+        return $strategy;
     }
 
     /**
@@ -144,54 +147,20 @@ class StorageBuilder implements LoggerAwareInterface
     }
 
     /**
-     * Get the current Logger.
+     * Set a custom strategy.
      *
-     * @return LoggerInterface
-     */
-    public function getLogger()
-    {
-        return $this->logger;
-    }
-
-    /**
-     * Check if one or more adapters has been loaded.
+     * @param AbstractStorageCallStrategy $strategy
      *
-     * @return bool
-     */
-    public function hasLoadedAdapters()
-    {
-        return !empty($this->adapters);
-    }
-
-    /**
-     * @param AdapterInterface $adapter
-     */
-    private function registerAdapter(AdapterInterface $adapter)
-    {
-        if ($this->logger && $adapter instanceof LoggerAwareInterface) {
-            $adapter->setLogger($this->logger);
-        }
-        $this->adapters[] = $adapter;
-        $this->log(LogLevel::INFO, 'Added new adapter {{adapter}}', ['adapter' => $adapter->getName()]);
-    }
-
-    /**
      * @return $this
      */
-    private function addBuiltinAdapters()
+    public function setStrategy(AbstractStorageCallStrategy $strategy)
     {
-        if (!self::$builtInAdaptersLoaded) {
-            self::$builtInAdaptersLoaded = true;
-            foreach (glob(__DIR__.DIRECTORY_SEPARATOR.'Adapter'.DIRECTORY_SEPARATOR.'*.php') as $adapterFileName) {
-                $className = __NAMESPACE__.'\\'.'Adapter'.'\\'.basename($adapterFileName, '.php');
-                try {
-                    $class = new $className();
-                    self::$builtinAdapters[$class->getName()] = $class;
-                } catch (\Exception $e) {
-                    $this->log(LogLevel::INFO, 'Impossible start {{className}} client', ['className' => $className]);
-                }
-            }
-        }
+        $this->logger->log(
+            LogLevel::INFO,
+            'Set the strategy {strategy}',
+            ['strategy' => $strategy->getStrategyName()]
+        );
+        $this->strategy = $strategy;
 
         return $this;
     }
@@ -204,43 +173,27 @@ class StorageBuilder implements LoggerAwareInterface
         return DefaultStrategyFactory::create();
     }
 
-    private function getDefaultBuiltinAdapter()
-    {
-        return FileSystemAdapter::NAME;
-    }
-
     /**
-     * @param $adapter
+     * Get the current Logger.
      *
-     * @throws StorageAdapterNotFoundException
+     * @return LoggerInterface
      */
-    private function assertBuiltInAdapterExists($adapter)
+    public function getLogger()
     {
-        if (!array_key_exists($adapter, self::$builtinAdapters)) {
-            throw new StorageAdapterNotFoundException("Builtin storage \"$adapter\" not found");
-        }
-    }
-
-    private function log($level, $msg, $context)
-    {
-        if (!$this->getLogger()) {
-            return;
-        }
-        $this->getLogger()->log($level, $msg, $context);
+        return $this->logger;
     }
 
     /**
-     * @return AbstractStorageCallStrategy
+     * Set custom logger.
+     *
+     * @param LoggerInterface $logger
+     *
+     * @return $this
      */
-    private function createStrategy()
+    public function setLogger(LoggerInterface $logger)
     {
-        $strategy = $this->getStrategy();
-        $strategy->setAdapters($this->adapters);
-        if ($this->getLogger()) {
-            $strategy->setLogger($this->getLogger());
-        }
-        $this->log(LogLevel::INFO, 'Creating strategy {{strategy}}', ['strategy' => $strategy->getStrategyName()]);
+        $this->logger = $logger;
 
-        return $strategy;
+        return $this;
     }
 }

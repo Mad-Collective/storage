@@ -2,20 +2,78 @@
 
 namespace Cmp\Storage\Adapter;
 
+use Cmp\Storage\AdapterInterface;
 use Cmp\Storage\Exception\FileExistsException;
 use Cmp\Storage\Exception\FileNotFoundException;
 use Cmp\Storage\Exception\InvalidPathException;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LogLevel;
+use Psr\Log\NullLogger;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 /**
  * Class FileSystemAdapter.
  */
-class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
+class FileSystemAdapter implements AdapterInterface, LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+    use LogicalChecksTrait;
+
     /**
      * Adapter Name.
      */
     const NAME = 'FileSystem';
     const MAX_PATH_SIZE = 255; //The major part of fs has this limit
+
+    public function __construct()
+    {
+        $this->logger = new NullLogger();
+    }
+
+    /**
+     * Read a file.
+     *
+     * @param string $path The path to the file
+     *
+     * @throws FileNotFoundException
+     *
+     * @return string The file contents or false on failure
+     */
+    public function get($path)
+    {
+        $path = $this->normalizePath($path);
+        $this->assertNotFileExists($path);
+
+        return file_get_contents($path);
+    }
+
+    private function normalizePath($path)
+    {
+        $this->assertFileMaxLength($path);
+
+        return realpath($path);
+    }
+
+    /**
+     * @param $path
+     *
+     * @throws InvalidPathException
+     */
+    private function assertFileMaxLength($path)
+    {
+        if (strlen(basename($path)) > self::MAX_PATH_SIZE) {
+            $e = new InvalidPathException($path);
+            $this->logger->log(
+                LogLevel::ERROR,
+                'Adapter "'.$this->getName().'" fails. Invalid path {path}.',
+                ['exception' => $e, 'path' => $path]
+            );
+
+            throw $e;
+        }
+    }
 
     /**
      * Get Adapter name.
@@ -25,6 +83,25 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     public function getName()
     {
         return self::NAME;
+    }
+
+    /**
+     * @param $path
+     *
+     * @throws FileNotFoundException
+     */
+    private function assertNotFileExists($path)
+    {
+        if (!$this->exists($path) || !is_file($path)) {
+            $e = new FileNotFoundException($path);
+            $this->logger->log(
+                LogLevel::ERROR,
+                'Adapter "'.$this->getName().'" fails. File {path} not exists.',
+                ['exception' => $e, 'path' => $path]
+            );
+
+            throw $e;
+        }
     }
 
     /**
@@ -42,28 +119,11 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     }
 
     /**
-     * Read a file.
-     *
-     * @param string $path The path to the file
-     *
-     * @throws \Cmp\Storage\FileNotFoundException
-     *
-     * @return string The file contents or false on failure
-     */
-    public function get($path)
-    {
-        $path = $this->normalizePath($path);
-        $this->assertNotFileExists($path);
-
-        return file_get_contents($path);
-    }
-
-    /**
      * Retrieves a read-stream for a path.
      *
      * @param string $path The path to the file
      *
-     * @throws \Cmp\Storage\FileNotFoundException
+     * @throws FileNotFoundException
      *
      * @return resource The path resource or false on failure
      */
@@ -78,8 +138,8 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     /**
      * Rename a file.
      *
-     * @param string $path      Path to the existing file
-     * @param string $newpath   The new path of the file
+     * @param string $path    Path to the existing file
+     * @param string $newpath The new path of the file
      * @param bool   $overwrite
      *
      * @return bool Thrown if $newpath exists
@@ -89,9 +149,7 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     public function rename($path, $newpath, $overwrite = false)
     {
         $path = $this->normalizePath($path);
-        if (!$overwrite && $this->exists($newpath)) {
-            throw new FileExistsException($newpath);
-        }
+        $this->ensureWeCanWriteDestFile($newpath, $overwrite);
         $this->assertNotFileExists($path);
 
         return rename($path, $newpath);
@@ -100,8 +158,8 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     /**
      * Copy a file.
      *
-     * @param string $path      Path to the existing file
-     * @param string $newpath   The destination path of the copy
+     * @param string $path    Path to the existing file
+     * @param string $newpath The destination path of the copy
      *
      * @return bool
      */
@@ -135,6 +193,28 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     }
 
     /**
+     * Removes directory recursively.
+     *
+     * @param string $path
+     *
+     * @return bool
+     */
+    private function removeDirectory($path)
+    {
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($files as $fileinfo) {
+            $todo = ($fileinfo->isDir() ? 'rmdir' : 'unlink');
+            $todo($fileinfo->getRealPath());
+        }
+
+        return rmdir($path);
+    }
+
+    /**
      * Create a file or update if exists. It will create the missing folders.
      *
      * @param string $path     The path to the file
@@ -147,12 +227,8 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     public function put($path, $contents)
     {
         $this->assertFileMaxLength($path);
-        if (is_dir($path)) {
-            throw new InvalidPathException($path);
-        }
-        if (!$this->createParentFolder($path)) {
-            throw new InvalidPathException($path);
-        }
+        $this->assertIsDir($path);
+        $this->ensureParentPathExists($path);
         if (($size = file_put_contents($path, $contents)) === false) {
             return false;
         }
@@ -161,52 +237,45 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     }
 
     /**
-     * Create a file or update if exists. It will create the missing folders.
-     *
-     * @param string   $path     The path to the file
-     * @param resource $resource The file handle
-     *
-     * @return bool
+     * @param $path
      *
      * @throws InvalidPathException
      */
-    public function putStream($path, $resource)
+    private function assertIsDir($path)
     {
-        $this->assertFileMaxLength($path);
         if (is_dir($path)) {
-            throw new InvalidPathException($path);
-        }
-        if (!$this->createParentFolder($path)) {
-            throw new InvalidPathException($path);
-        }
-        $stream = fopen($path, 'w+');
+            $e = new InvalidPathException($path);
 
-        if (!$stream) {
-            return false;
+            $this->logger->log(
+                LogLevel::ERROR,
+                'Adapter "'.$this->getName().'" fails. Path {path} is a directory.',
+                ['exception' => $e, 'path' => $path]
+            );
+
+            throw $e;
         }
-
-        stream_copy_to_stream($resource, $stream);
-
-        return fclose($stream);
     }
 
     /**
      * @param $path
      *
-     * @throws FileNotFoundException
+     * @throws InvalidPathException
      */
-    private function assertNotFileExists($path)
+    private function ensureParentPathExists($path)
     {
-        if (!$this->exists($path) || !is_file($path)) {
-            throw new FileNotFoundException($path);
+        if (!$this->createParentFolder($path)) {
+            $e = new InvalidPathException($path);
+
+            $this->logger->log(
+                LogLevel::ERROR,
+                'Adapter "'.
+                $this->getName().
+                '" fails. Parent path {path} is not ready and it\'s impossible to create it.',
+                ['exception' => $e, 'path' => $path]
+            );
+
+            throw $e;
         }
-    }
-
-    private function normalizePath($path)
-    {
-        $this->assertFileMaxLength($path);
-
-        return realpath($path);
     }
 
     /**
@@ -225,43 +294,29 @@ class FileSystemAdapter implements \Cmp\Storage\AdapterInterface
     }
 
     /**
-     * @param $path
+     * Create a file or update if exists. It will create the missing folders.
+     *
+     * @param string   $path     The path to the file
+     * @param resource $resource The file handle
+     *
+     * @return bool
      *
      * @throws InvalidPathException
      */
-    private function assertFileMaxLength($path)
+    public function putStream($path, $resource)
     {
-        if (strlen(basename($path)) > self::MAX_PATH_SIZE) {
-            throw new InvalidPathException($path);
-        }
-    }
+        $this->assertFileMaxLength($path);
+        $this->assertIsDir($path);
+        $this->ensureParentPathExists($path);
 
-    /**
-     * Removes directory recursively.
-     *
-     * @param string $path
-     *
-     * @return bool
-     */
-    private function removeDirectory($path)
-    {
-        if (is_dir($path)) {
-            $objects = scandir($path);
-            foreach ($objects as $object) {
-                if ($object != '.' && $object != '..') {
-                    if (is_dir($path.'/'.$object)) {
-                        if (!$this->removeDirectory($path.'/'.$object)) {
-                            return false;
-                        }
-                    } else {
-                        if (!unlink($path.'/'.$object)) {
-                            return false;
-                        }
-                    }
-                }
-            }
+        $stream = fopen($path, 'w+');
 
-            return rmdir($path);
+        if (!$stream) {
+            return false;
         }
+
+        stream_copy_to_stream($resource, $stream);
+
+        return fclose($stream);
     }
 }

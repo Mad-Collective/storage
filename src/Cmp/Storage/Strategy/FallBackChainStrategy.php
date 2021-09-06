@@ -5,13 +5,14 @@ namespace Cmp\Storage\Strategy;
 use Cmp\Storage\AdapterInterface;
 use Cmp\Storage\Exception\FileExistsException;
 use Cmp\Storage\Exception\FileNotFoundException;
-use Psr\Log\LogLevel;
 
 /**
  * Class FallBackChainStrategy.
  */
 class FallBackChainStrategy extends AbstractStorageCallStrategy
 {
+    use  RunAndLogTrait;
+
     public function getStrategyName()
     {
         return 'FallBackChainStrategy';
@@ -28,7 +29,7 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
             return $adapter->exists($path);
         };
 
-        return $this->runChainAndLog($fn);
+        return $this->runChain($fn);
     }
 
     /**
@@ -46,7 +47,7 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
             return $adapter->get($path);
         };
 
-        return $this->runChainAndLog($fn);
+        return $this->logOnFalse($this->runChain($fn), "Impossible get file: {file}.", ['file' => $path]);
     }
 
     /**
@@ -64,14 +65,18 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
             return $adapter->getStream($path);
         };
 
-        return $this->runChainAndLog($fn);
+        return $this->logOnFalse(
+            $this->runChain($fn),
+            "Impossible get stream form file: {file}.",
+            ['file' => $path]
+        );
     }
 
     /**
      * Rename a file.
      *
-     * @param string $path      Path to the existing file
-     * @param string $newpath   The new path of the file
+     * @param string $path    Path to the existing file
+     * @param string $newpath The new path of the file
      * @param bool   $overwrite
      *
      * @return bool
@@ -84,14 +89,18 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
             return $adapter->rename($path, $newpath, $overwrite);
         };
 
-        return $this->runChainAndLog($fn);
+        return $this->logOnFalse(
+            $this->runChain($fn),
+            "Impossible rename file from {from} to {to}.",
+            ['from' => $path, 'to' => $newpath]
+        );
     }
 
     /**
      * Copy a file.
      *
-     * @param string $path      Path to the existing file
-     * @param string $newpath   The new path of the file
+     * @param string $path    Path to the existing file
+     * @param string $newpath The new path of the file
      *
      * @return bool
      *
@@ -103,7 +112,11 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
             return $adapter->copy($path, $newpath);
         };
 
-        return $this->runChainAndLog($fn);
+        return $this->logOnFalse(
+            $this->runChain($fn),
+            "Impossible copy file from {from} to {to}.",
+            ['from' => $path, 'to' => $newpath]
+        );
     }
 
     /**
@@ -121,7 +134,7 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
             return $adapter->delete($path);
         };
 
-        return $this->runChainAndLog($fn);
+        return $this->logOnFalse($this->runChain($fn), "Impossible delete file {file}.", ['file' => $path]);
     }
 
     /**
@@ -140,7 +153,7 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
             return $adapter->put($path, $contents);
         };
 
-        return $this->runChainAndLog($fn);
+        return $this->logOnFalse($this->runChain($fn), "Impossible put file {file}.", ['file' => $path]);
     }
 
     /**
@@ -149,7 +162,7 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
      * @param string   $path     The path to the file
      * @param resource $resource The file handle
      *
-     * @throws \Cmp\Storage\InvalidArgumentException Thrown if $resource is not a resource
+     * @throws \InvalidArgumentException Thrown if $resource is not a resource
      *
      * @return bool True on success, false on failure
      */
@@ -159,57 +172,6 @@ class FallBackChainStrategy extends AbstractStorageCallStrategy
             return $adapter->putStream($path, $resource);
         };
 
-        return $this->runChainAndLog($fn);
-    }
-
-    /**
-     * Executes the operation in all adapters, returning on the first success or false if at least one executed the
-     * operation without raising exceptions.
-     *
-     * @param callable $fn
-     *
-     * @return mixed If all adapters raised exceptions, the first one will be thrown
-     *
-     * @throws bool
-     */
-    private function runChainAndLog(callable $fn)
-    {
-        $firstException = false;
-        $call = false;
-        $result = false;
-        foreach ($this->getAdapters() as $adapter) {
-            try {
-                $result = $fn($adapter);
-                $call = true;
-                if ($result !== false) {
-                    return $result;
-                }
-            } catch (\Exception $exception) {
-                if (!$firstException) {
-                    $firstException = $exception;
-                }
-                $this->logAdapterException($adapter, $exception);
-            }
-        }
-
-        // Result will be set if at least one adapters executed the operation without exceptions
-        if ($call) {
-            return $result;
-        }
-
-        throw $firstException;
-    }
-
-    /**
-     * @param \Cmp\Storage\VirtualStorageInterface $adapter
-     * @param \Exception                           $e
-     */
-    private function logAdapterException($adapter, $e)
-    {
-        $this->log(
-            LogLevel::ERROR,
-            'Adapter "'.$adapter->getName().'" fails.',
-            ['exception' => $e]
-        );
+        return $this->logOnFalse($this->runChain($fn), "Impossible put file stream {file}.", ['file' => $path]);
     }
 }
